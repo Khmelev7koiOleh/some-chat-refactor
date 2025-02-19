@@ -4,17 +4,18 @@ import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import ChatsView from "./ChatsView.vue";
 import MessageView from "./MessageView.vue";
-
+import FindFriendsView from "./FindFriendsView.vue";
+import { storeToRefs } from "pinia";
 import { ref, onMounted } from "vue";
 import { useAuthStore } from "../store/auth-store";
 
 const authStore = useAuthStore();
+const { userDataForChat, user, showFindFriends } = storeToRefs(authStore);
 
-let open = ref(true);
-
-onMounted(() => {
+onMounted(async () => {
   try {
     authStore.getAllUsers();
+    await authStore.getAllChatsByUser();
   } catch (error) {
     console.log(error);
   }
@@ -23,11 +24,13 @@ onMounted(() => {
 <template>
   <div class="fixed w-[420px] z-10 bg-gray-800 h-[100vh]">
     <div class="mx-4 my-4 flex items-center gap-4">
-      <img
-        :src="authStore.user.photoURL"
-        class="w-10 h-10 rounded-full"
-        alt="Profile"
-      />
+      <div>
+        <img
+          :src="authStore.user.photoUrl"
+          alt=""
+          class="w-12 h-12 rounded-full"
+        />
+      </div>
 
       <div class="text-white font-light text-md">
         {{ authStore.user.email }}
@@ -57,16 +60,22 @@ onMounted(() => {
           class="flex items-center justify-center"
         />
         <input
+          @click="showFindFriends = !showFindFriends"
           type="text"
           placeholder="Search"
           class="focus:outline-none placeholder:text-gray-200 placeholder:text-md"
         />
       </div>
     </div>
+    <div v-if="!showFindFriends" class="bg-gray-900 h-[100vh]">
+      <FindFriendsView />
+    </div>
 
-    <ChatsView />
+    <div v-if="showFindFriends">
+      <ChatsView />
+    </div>
   </div>
-  <div v-if="open">
+  <div v-if="userDataForChat.length">
     <MessageView />
   </div>
   <div
