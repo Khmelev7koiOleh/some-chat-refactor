@@ -6,9 +6,10 @@ import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import CheckAllIcon from "vue-material-design-icons/CheckAll.vue";
 
 import { useAuthStore } from "../store/auth-store";
+import { onMounted } from "vue";
 
 const authStore = useAuthStore();
-const { userDataForChat, localId } = storeToRefs(authStore);
+const { userDataForChat, localId, user: thisUser } = storeToRefs(authStore);
 
 const createNewChat = (user) => {
   userDataForChat.value = [];
@@ -18,6 +19,7 @@ const createNewChat = (user) => {
     name: user.displayName,
     picture: user.photoURL,
   });
+  console.log("Creating new chat with user:", userDataForChat.value);
 };
 const hideMyChat = (data) => {
   if (data === authStore.user.localId) {
@@ -26,9 +28,8 @@ const hideMyChat = (data) => {
     return true;
   }
 };
-
 const openChat = async (user) => {
-  console.log("Opening chat:", user.uid);
+  console.log("Opening chat:", thisUser.value.localId);
 
   userDataForChat.value = [
     {
@@ -39,7 +40,7 @@ const openChat = async (user) => {
   ];
 
   try {
-    await authStore.getChatById(user.uid); // Use `authStore.getChatById`
+    await authStore.getChatById(user.uid, thisUser.value.localId); // Use `authStore.getChatById`
   } catch (error) {
     console.error("Error fetching chat:", error);
   }

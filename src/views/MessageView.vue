@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watchEffect } from "vue";
+import moment from "moment";
 import { storeToRefs } from "pinia";
 import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
@@ -15,9 +16,10 @@ const authStore = useAuthStore();
 const {
   userDataForChat,
   user,
-
-  showFindFriends,
+  currentChatId,
   currentChat,
+  showFindFriends,
+
   chats,
 } = storeToRefs(authStore);
 
@@ -28,18 +30,20 @@ watchEffect(() => {
 });
 
 const sendMessage = async () => {
+  if (!message.value.trim()) return; // Prevent sending empty messages
+
+  if (!userDataForChat.value.length || !userDataForChat.value[0]?.id) {
+    console.error("Chat ID is missing!");
+    return;
+  }
+
   await authStore.sendMessage({
     message: message.value,
-
-    chatId: userDataForChat.value[0].id,
+    chatId: currentChatId.value, // Now safely accessed
   });
-  if (message.value) {
-    message.value = "";
-  }
+
+  message.value = ""; // Clear input after sending
 };
-const sortedChats = computed(() => {
-  return [chats].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-});
 </script>
 <template>
   <div
@@ -54,7 +58,6 @@ const sortedChats = computed(() => {
           alt=""
         />
         <div class="text-white">{{ userDataForChat[0].name }}</div>
-        <div class="text-white">{{ userDataForChat }}</div>
       </div>
 
       <div>
@@ -72,30 +75,50 @@ const sortedChats = computed(() => {
     >
       <div v-if="chats && chats.length > 0">
         <!-- Loop through all chats -->
-        <div v-for="(chat, chatIndex) in chats" :key="chatIndex">
+        <div v-for="(chat, chatIndex) in currentChat" :key="chatIndex">
           <!-- Check if messages exist in chat -->
-          <div v-if="chat.mesagges && chat.mesagges.length > 0">
+          <div v-if="chat">
             <!-- Loop through messages in each chat -->
+
             <div
-              v-for="(msg, msgIndex) in chat.mesagges"
+              v-for="(msg, msgIndex) in chat"
               :key="msgIndex"
               class="px-20 text-sm"
             >
               <div
                 v-if="msg.senderId !== user.localId"
-                class="w-[calc(100%-100px)]"
+                class="w-[calc(80%-100px)] flex justify-start items-center gap-2"
               >
-                <div class="inline-block bg-white p-2 rounded-md my-1">
-                  {{ msg.messages }}
+                <div
+                  v-if="msg.message"
+                  class="inline-block bg-white p-2 rounded-md my-2 break-all"
+                >
+                  {{ msg.message }}
+                </div>
+                <div v-if="msg.createdAt">
+                  {{
+                    moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
+                      "h:mm"
+                    )
+                  }}
                 </div>
               </div>
 
               <div
                 v-else
-                class="flex justify-end space-x-1 w-[calc(100%-100px)] float-right mt-8"
+                class="w-[calc(80%-100px)] flex justify-end items-center space-x-1 float-right mt-8"
               >
-                <div class="inline-block bg-green-400 p-2 rounded-md my-1">
-                  {{ msg.messages }}
+                <div
+                  class="inline-block bg-green-400 p-2 rounded-md my-2 break-all"
+                >
+                  {{ msg.message }}
+                </div>
+                <div>
+                  {{
+                    moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
+                      "h:mm"
+                    )
+                  }}
                 </div>
               </div>
             </div>
@@ -108,6 +131,7 @@ const sortedChats = computed(() => {
       <div v-else>
         <p>No chats available</p>
       </div>
+      <div class="py-20"></div>
     </div>
 
     <div id="SendSection" class="fixed bottom-0 bg-black h-[60px] w-full">
@@ -144,4 +168,8 @@ const sortedChats = computed(() => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.break-letters {
+  word-break: break-all;
+}
+</style>

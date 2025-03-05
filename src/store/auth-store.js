@@ -3,6 +3,7 @@ import { onMounted, ref, watchEffect } from "vue";
 import { useRouter } from "vue-router";
 import { nextTick } from "vue";
 import moment from "moment";
+
 import { auth, db } from "../firebase-init";
 import { v4 as uuid } from "uuid";
 import { signInWithPopup, signOut, GoogleAuthProvider } from "firebase/auth";
@@ -12,6 +13,7 @@ import {
   setDoc,
   getDocs,
   collection,
+  where,
   updateDoc,
   arrayUnion,
   onSnapshot,
@@ -40,7 +42,7 @@ export const useAuthStore = defineStore(
     const userDataForChat = ref([]);
     const chats = ref([]);
     const showFindFriends = ref(false);
-    const currentChat = ref(null);
+    const currentChat = ref([]);
     const currentChatId = ref(null);
 
     const router = useRouter();
@@ -115,67 +117,103 @@ export const useAuthStore = defineStore(
     });
     const sendMessage = async (data) => {
       try {
-        if (data.chatId) {
-          await updateDoc(doc(db, `chat/${data.chatId}`), {
+        const chatRef = doc(db, "chats", data.chatId);
+
+        // Check if the chat exists
+        const chatSnap = await getDoc(chatRef);
+
+        if (chatSnap.exists()) {
+          // If chat exists, update it
+          await updateDoc(chatRef, {
             messages: arrayUnion({
-              id: localId.value, // Unique ID for each message
-              senderId: user.value?.localId, // Identify the sender
-              messages: data.message, // Store the message content
+              id: uuid(),
+              senderId: user.value?.localId,
+              message: data.message, // Fix key name
               createdAt: moment().format("MMMM Do YYYY, h:mm:ss a"),
             }),
           });
         } else {
-          let id = uuid();
-          // let subid = uid();
-          await setDoc(doc(db, `chat/${id}`), {
-            mesagges: [
-              {
-                id: uuid(),
-                senderId: user.value?.localId,
-                messages: data.message,
-                createdAt: moment().format("MMMM Do YYYY, h:mm:ss a"),
-              },
-            ],
+          // If chat does NOT exist, create it
+          const newChatId = currentChatId.value; // Generate new chat ID
+          const newChatRef = doc(db, "chats", newChatId);
+
+          await setDoc(newChatRef, {
+            messages: arrayUnion({
+              id: uuid(),
+              senderId: user.value?.localId,
+              message: data.message,
+              createdAt: moment().format("MMMM Do YYYY, h:mm:ss a"),
+            }),
           });
 
-          userDataForChat[0].id = id;
+          userDataForChat[0].id = newChatId; // Update UI with new chat ID
           showFindFriends.value = false;
         }
       } catch (error) {
-        console.log(error);
+        console.error("Error sending message:", error);
       }
     };
-
-    const getChatById = (id) => {
-      console.log(id);
-      onSnapshot(doc(db, `chat/${id}`), (doc) => {
-        let res = [];
-        res.push(doc.data());
-        console.log(res);
-        currentChat.value = res;
-        console.log(id);
-      });
-    };
-
-    // const getChatById = (chatId) => {
-    //   console.log("Fetching chat for ID:", chatId);
-
-    //   const chatRef = collection(db, "chats", chatId, "messages");
-
-    //   const q = query(chatRef, orderBy("createdAt", "asc"));
-
-    //   onSnapshot(q, (snapshot) => {
-    //     let messages = [];
-    //     snapshot.forEach((doc) => {
-    //       messages.push(doc.data());
-    //     });
-    //     currentChat.value = messages;
-    //     console.log("Chat messages:", messages);
+    // const qqq = (id) => {
+    //   console.log(id);
+    //   onSnapshot(doc(db, `chat/${id}`), (doc) => {
+    //     console.log(doc.data());
+    //     let res = [];
+    //     res.push(doc.data());
+    //     console.log(res);
+    //     currentChat.value = res;
+    //     console.log(id);
     //   });
     // };
 
+    const getChatById = async (userId1, userId2) => {
+      try {
+        const chatsRef = collection(db, "chats");
+        const q = query(
+          chatsRef,
+          where("participants", "array-contains", userId1)
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        let chat = querySnapshot.docs.find((doc) =>
+          doc.data().participants.includes(userId2)
+        );
+
+        if (chat) {
+          // ✅ Chat exists
+          currentChat.value = chat.data();
+          currentChatId.value = chat.id;
+          console.log("Chat already exists:", chat.id);
+          return chat.id;
+        }
+
+        // ✅ Create new chat if it doesn't exist
+        const newChatId = `${userId1}-${userId2}`;
+        const newChatRef = doc(db, "chats", newChatId);
+
+        await setDoc(newChatRef, {
+          participants: [userId1, userId2],
+          messages: [
+            {
+              senderId: user.value?.localId,
+              message: "Hello!",
+              createdAt: moment().format("MMMM Do YYYY, h:mm:ss a"),
+            },
+          ],
+        });
+
+        currentChatId.value = newChatId;
+        console.log("New chat created:", newChatId);
+
+        return newChatId;
+      } catch (error) {
+        console.error("Error fetching or creating chat:", error);
+        return null;
+      }
+    };
+
     const getAllChatsByUser = () => {
-      const q = query(collection(db, "chat"));
+      const q = query(collection(db, "chats"));
 
       onSnapshot(q, (querySnapshot) => {
         const chatArray = []; // Temporary array to hold chats

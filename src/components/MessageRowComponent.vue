@@ -12,7 +12,7 @@
         <div class="flex justify-between items-center">
           <div class="text-white">{{ chat.id }}</div>
 
-          <div class="text-white">{{ chat.mesagges[0].id }}</div>
+          <div class="text-white">{{ chat.messages[0].id }}</div>
         </div>
 
         <div class="flex items-center">
