@@ -72,6 +72,7 @@ export const useAuthStore = defineStore(
         const userSnap = await getDoc(userRef);
 
         if (!userSnap.exists()) {
+          // Create a new user document if it doesn't exist
           await setDoc(userRef, {
             uid: result.user.uid,
             displayName: result.user.displayName,
@@ -86,15 +87,19 @@ export const useAuthStore = defineStore(
           console.log("User already exists in Firestore:", userSnap.data());
         }
 
+        // Set the user in the store
         setUser(result.user);
+
+        // Set up real-time listeners after login
+        setupRealTimeListeners(result.user.uid);
+
+        // Redirect to home page
         router.push("/");
       } catch (error) {
         console.error("Login failed:", error);
         router.push("/login");
       }
     };
-
-    // ✅ Logout function
 
     // ✅ Fetch all users from Firestore
     const getAllUsers = async () => {
@@ -121,6 +126,7 @@ export const useAuthStore = defineStore(
         const chatSnap = await getDoc(chatRef);
 
         if (chatSnap.exists()) {
+          // If chat exists, update it with the new message
           await updateDoc(chatRef, {
             messages: arrayUnion({
               id: uuid(),
@@ -130,20 +136,35 @@ export const useAuthStore = defineStore(
             }),
           });
         } else {
+          // If chat doesn't exist, create it with participants and the first message
           const newChatId = currentChatId.value;
           const newChatRef = doc(db, "chats", newChatId);
 
           await setDoc(newChatRef, {
-            messages: arrayUnion({
-              id: uuid(),
-              senderId: user.value?.localId,
-              message: data.message,
-              createdAt: moment().format("MMMM Do YYYY, h:mm:ss a"),
-            }),
+            participants: [user.value?.localId, data.recipientId], // Include participants
+            messages: [
+              {
+                id: uuid(),
+                senderId: user.value?.localId,
+                message: data.message,
+                createdAt: moment().format("MMMM Do YYYY, h:mm:ss a"),
+              },
+            ],
           });
 
+          // Update UI with the new chat ID
           userDataForChat[0].id = newChatId;
           showFindFriends.value = false;
+
+          // Set up a real-time listener for the new chat
+          const unsubscribe = onSnapshot(newChatRef, (doc) => {
+            if (doc.exists()) {
+              currentChat.value = doc.data(); // Update reactively
+            }
+          });
+
+          // Store the unsubscribe function for cleanup (if needed)
+          // unsubscribeChatListener = unsubscribe;
         }
       } catch (error) {
         console.error("Error sending message:", error);
