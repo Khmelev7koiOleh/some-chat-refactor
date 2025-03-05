@@ -7,6 +7,9 @@ import CheckAllIcon from "vue-material-design-icons/CheckAll.vue";
 
 import { useAuthStore } from "../store/auth-store";
 import { onMounted } from "vue";
+import { useMessageViewStore } from "../store/messageView-store";
+
+const messageViewStore = useMessageViewStore();
 
 const authStore = useAuthStore();
 const { userDataForChat, localId, user: thisUser } = storeToRefs(authStore);
@@ -44,6 +47,7 @@ const openChat = async (user) => {
   } catch (error) {
     console.error("Error fetching chat:", error);
   }
+  messageViewStore.messageViewOpen = true;
 };
 </script>
 <template>
