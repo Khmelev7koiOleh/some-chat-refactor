@@ -44,7 +44,9 @@ export const useAuthStore = defineStore(
     const showFindFriends = ref(false);
     const currentChat = ref([]);
     const currentChatId = ref(null);
-
+    let unsubscribeUserProfile = ref(null);
+    let unsubscribeChats = ref(null);
+    let unsubscribeCurrentChat = ref(null);
     const router = useRouter();
 
     const setUser = (userInfo) => {
@@ -59,6 +61,41 @@ export const useAuthStore = defineStore(
       };
     };
 
+    const setupRealTimeListeners = (userId) => {
+      // Clean up previous listeners
+      if (unsubscribeUserProfile) unsubscribeUserProfile();
+      if (unsubscribeChats) unsubscribeChats();
+      if (unsubscribeCurrentChat) unsubscribeCurrentChat();
+
+      // Set up new listeners
+      const userRef = doc(db, "users", userId);
+      unsubscribeUserProfile = onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+          setUser(doc.data());
+        }
+      });
+
+      const chatsQuery = query(
+        collection(db, "chats"),
+        where("participants", "array-contains", userId)
+      );
+      unsubscribeChats = onSnapshot(chatsQuery, (querySnapshot) => {
+        const chatArray = [];
+        querySnapshot.forEach((doc) => {
+          chatArray.push({ id: doc.id, ...doc.data() });
+        });
+        chats.value = chatArray;
+      });
+
+      if (currentChatId.value) {
+        const currentChatRef = doc(db, "chats", currentChatId.value);
+        unsubscribeCurrentChat = onSnapshot(currentChatRef, (doc) => {
+          if (doc.exists()) {
+            currentChat.value = doc.data();
+          }
+        });
+      }
+    };
     // ✅ Login function with user existence check
     const login = async () => {
       try {
