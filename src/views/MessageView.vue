@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, watchEffect } from "vue";
+import { ref, computed, watchEffect, onMounted, nextTick, watch } from "vue";
 import moment from "moment";
 import { storeToRefs } from "pinia";
+
 import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
@@ -43,7 +44,14 @@ const sendMessage = async () => {
   });
 
   message.value = ""; // Clear input after sending
+  const objDiv = document.getElementById("MessageSection");
+  objDiv.scrollTo({
+    top: objDiv.scrollHeight, // Scroll to the bottom
+    behavior: "smooth", // Add smooth scrolling
+  });
 };
+
+// Scroll to the last message on initial load
 </script>
 <template>
   <div
