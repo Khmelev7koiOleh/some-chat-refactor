@@ -21,8 +21,12 @@ onMounted(async () => {
   }
 });
 </script>
+
 <template>
-  <div class="fixed w-[420px] z-10 bg-gray-800 h-[100vh]">
+  <div
+    class="fixed sm:w-full sm:h-full lg:w-[420px] lg:h-[100vh] bg-gray-800 z-10"
+  >
+    <!-- Profile Header -->
     <div class="mx-4 my-4 flex items-center gap-4">
       <div>
         <img
@@ -31,14 +35,14 @@ onMounted(async () => {
           class="w-12 h-12 rounded-full"
         />
       </div>
-
       <div class="text-white font-light text-md">
         {{ authStore.user.email }}
       </div>
     </div>
+
+    <!-- Chat Header -->
     <div id="Header" class="flex justify-between items-center px-4 py-2 pt-10">
       <div class="text-xl text-gray-200 font-medium">Chats</div>
-
       <div class="flex justify-between items-center gap-4">
         <AccountGroupIcon fillColor="#FFFFFF" :size="25" />
         <DotsVerticalIcon
@@ -50,6 +54,7 @@ onMounted(async () => {
       </div>
     </div>
 
+    <!-- Search bar -->
     <div id="Search" class="w-full my-4 px-4">
       <div
         class="w-full flex justify-start items-center gap-3 px-2 py-1 border border-gray-200 rounded-lg"
@@ -67,20 +72,26 @@ onMounted(async () => {
         />
       </div>
     </div>
-    <div v-if="!showFindFriends" class="bg-gray-900 h-[100vh]">
+
+    <!-- Find Friends View or Chats View -->
+    <div v-if="!showFindFriends" class="bg-gray-900 sm:h-[calc(100vh-90px)]">
       <FindFriendsView />
     </div>
 
-    <div v-if="showFindFriends">
+    <div v-if="showFindFriends" class="sm:h-[calc(100vh-90px)]">
       <ChatsView />
     </div>
   </div>
+
+  <!-- Message View -->
   <div v-if="userDataForChat.length">
     <MessageView />
   </div>
+
+  <!-- Default message view if no chat exists -->
   <div
     v-else
-    class="ml-[420px] w-[calc(100vw-420px)] h-[100vh] fixed text-center bg-gray-100"
+    class="ml-[420px] sm:ml-0 sm:w-full sm:h-[calc(100vh-90px)] fixed text-center bg-gray-100"
   >
     <div class="h-full w-full flex flex-col justify-center items-center">
       <div class="grid">
@@ -103,4 +114,12 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+@media screen and (max-width: 640px) {
+  /* Adjust the sidebar layout for smaller screens */
+  #Header {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
