@@ -7,7 +7,7 @@ import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import EmoticonExcitedOutlineIcon from "vue-material-design-icons/EmoticonExcitedOutline.vue";
-
+import Paperclip from "vue-material-design-icons/Paperclip.vue";
 import PlusIcon from "vue-material-design-icons/Plus.vue";
 import SendIcon from "vue-material-design-icons/Send.vue";
 
@@ -145,10 +145,10 @@ const sendMessage = async () => {
     <div id="SendSection" class="fixed bottom-0 bg-black h-[60px] w-full">
       <div class="h-full w-full flex items-center">
         <div class="flex justify-between items-center gap-4 mx-6">
-          <EmoticonExcitedOutlineIcon
+          <Paperclip
             fillColor="#FFFFFF"
             :size="24"
-            class="flex items-center justify-center"
+            class="flex items-center justify-center rotate-45"
           />
           <EmoticonExcitedOutlineIcon
             fillColor="#FFFFFF"
