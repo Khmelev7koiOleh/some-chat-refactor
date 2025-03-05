@@ -44,9 +44,7 @@ export const useAuthStore = defineStore(
     const showFindFriends = ref(false);
     const currentChat = ref([]);
     const currentChatId = ref(null);
-    let unsubscribeUserProfile = ref(null);
-    let unsubscribeChats = ref(null);
-    let unsubscribeCurrentChat = ref(null);
+
     const router = useRouter();
 
     const setUser = (userInfo) => {
@@ -61,41 +59,6 @@ export const useAuthStore = defineStore(
       };
     };
 
-    const setupRealTimeListeners = (userId) => {
-      // Clean up previous listeners
-      if (unsubscribeUserProfile) unsubscribeUserProfile();
-      if (unsubscribeChats) unsubscribeChats();
-      if (unsubscribeCurrentChat) unsubscribeCurrentChat();
-
-      // Set up new listeners
-      const userRef = doc(db, "users", userId);
-      unsubscribeUserProfile = onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-          setUser(doc.data());
-        }
-      });
-
-      const chatsQuery = query(
-        collection(db, "chats"),
-        where("participants", "array-contains", userId)
-      );
-      unsubscribeChats = onSnapshot(chatsQuery, (querySnapshot) => {
-        const chatArray = [];
-        querySnapshot.forEach((doc) => {
-          chatArray.push({ id: doc.id, ...doc.data() });
-        });
-        chats.value = chatArray;
-      });
-
-      if (currentChatId.value) {
-        const currentChatRef = doc(db, "chats", currentChatId.value);
-        unsubscribeCurrentChat = onSnapshot(currentChatRef, (doc) => {
-          if (doc.exists()) {
-            currentChat.value = doc.data();
-          }
-        });
-      }
-    };
     // ✅ Login function with user existence check
     const login = async () => {
       try {
@@ -109,7 +72,6 @@ export const useAuthStore = defineStore(
         const userSnap = await getDoc(userRef);
 
         if (!userSnap.exists()) {
-          // Create a new user document if it doesn't exist
           await setDoc(userRef, {
             uid: result.user.uid,
             displayName: result.user.displayName,
@@ -124,19 +86,15 @@ export const useAuthStore = defineStore(
           console.log("User already exists in Firestore:", userSnap.data());
         }
 
-        // Set the user in the store
         setUser(result.user);
-
-        // Set up real-time listeners after login
-        setupRealTimeListeners(result.user.uid);
-
-        // Redirect to home page
         router.push("/");
       } catch (error) {
         console.error("Login failed:", error);
         router.push("/login");
       }
     };
+
+    // ✅ Logout function
 
     // ✅ Fetch all users from Firestore
     const getAllUsers = async () => {
