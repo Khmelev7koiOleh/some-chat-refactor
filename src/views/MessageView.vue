@@ -7,15 +7,11 @@ import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import EmoticonExcitedOutlineIcon from "vue-material-design-icons/EmoticonExcitedOutline.vue";
-import ArrowLeft from "vue-material-design-icons/ArrowLeft.vue";
 import Paperclip from "vue-material-design-icons/Paperclip.vue";
 import PlusIcon from "vue-material-design-icons/Plus.vue";
 import SendIcon from "vue-material-design-icons/Send.vue";
 
 import { useAuthStore } from "../store/auth-store";
-import { useMessageViewStore } from "../store/messageView-store";
-
-const messageViewStore = useMessageViewStore();
 
 const authStore = useAuthStore();
 const {
@@ -59,23 +55,16 @@ const sendMessage = async () => {
 </script>
 <template>
   <div
-    class="ml-[0px] w-full z-50 md:ml-[420px] md:w-[calc(100vw-420px)] h-[100vh] fixed text-center bg-gray-300"
+    class="ml-[420px] w-[calc(100vw-420px)] h-[100vh] fixed text-center bg-gray-300"
   >
     <div class="w-full flex justify-between items-center bg-black px-4">
-      <div>
-        <ArrowLeft
-          fillColor="#ffffff"
-          :size="24"
-          @click="messageViewStore.messageViewOpen = false"
-        />
-      </div>
       <div class="w-full h-full flex items-center gap-4 px-4 py-2">
+        <div></div>
         <img
           :src="userDataForChat[0].picture"
           class="w-12 h-12 rounded-full"
           alt=""
         />
-
         <div class="text-white">{{ userDataForChat[0].name }}</div>
       </div>
 
@@ -90,7 +79,7 @@ const sendMessage = async () => {
 
     <div
       id="MessageSection"
-      class="pt-20 pb-8 z-[-1] overflow-auto touch-auto fixed ml-[0px] w-full md:ml-[420px] md:w-[calc(100vw-420px)] h-[calc(100vh-65px)]"
+      class="pt-20 pb-8 z-[-1] overflow-auto touch-auto fixed w-[calc(100vw-420px)] h-[calc(100vh-65px)]"
     >
       <div v-if="chats && chats.length > 0">
         <!-- Loop through all chats -->

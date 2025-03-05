@@ -8,9 +8,6 @@ import FindFriendsView from "./FindFriendsView.vue";
 import { storeToRefs } from "pinia";
 import { ref, onMounted } from "vue";
 import { useAuthStore } from "../store/auth-store";
-import { useMessageViewStore } from "../store/messageView-store";
-
-const messageViewStore = useMessageViewStore();
 
 const authStore = useAuthStore();
 const { userDataForChat, user, showFindFriends } = storeToRefs(authStore);
@@ -25,7 +22,7 @@ onMounted(async () => {
 });
 </script>
 <template>
-  <div class="fixed w-[100vw] md:w-[420px] z-10 bg-gray-800 h-[100vh]">
+  <div class="fixed w-[420px] z-10 bg-gray-800 h-[100vh]">
     <div class="mx-4 my-4 flex items-center gap-4">
       <div>
         <img
@@ -70,10 +67,7 @@ onMounted(async () => {
         />
       </div>
     </div>
-    <div
-      v-if="!showFindFriends && !messageViewStore.messageViewOpen"
-      class="bg-gray-900 h-[100vh]"
-    >
+    <div v-if="!showFindFriends" class="bg-gray-900 h-[100vh]">
       <FindFriendsView />
     </div>
 
@@ -81,7 +75,7 @@ onMounted(async () => {
       <ChatsView />
     </div>
   </div>
-  <div v-if="messageViewStore.messageViewOpen">
+  <div v-if="userDataForChat.length">
     <MessageView />
   </div>
   <div
