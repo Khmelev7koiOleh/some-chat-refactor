@@ -10,6 +10,7 @@ const routes = [
   {
     path: "/",
     component: HomeView,
+    meta: { requiresAuth: true }, // Requires authentication
   },
 ];
 
