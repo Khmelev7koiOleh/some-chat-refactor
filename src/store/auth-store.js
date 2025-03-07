@@ -37,7 +37,7 @@ export const useAuthStore = defineStore(
       lastLoginAt: null,
       lastRefreshAt: null,
     });
-
+    const logoutPopUpOpen = ref(false);
     const allUsers = ref([]);
     const userDataForChat = ref([]);
     const chats = ref([]);
@@ -239,6 +239,7 @@ export const useAuthStore = defineStore(
           lastLoginAt: null,
           lastRefreshAt: null,
         };
+
         router.push("/login");
         console.log("User logged out successfully.");
       } catch (error) {
@@ -282,6 +283,7 @@ export const useAuthStore = defineStore(
       allUsers,
       userDataForChat,
       showFindFriends,
+      logoutPopUpOpen,
       sendMessage,
       currentChatId,
       currentChat,

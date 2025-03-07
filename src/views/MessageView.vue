@@ -7,12 +7,14 @@ import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import EmoticonExcitedOutlineIcon from "vue-material-design-icons/EmoticonExcitedOutline.vue";
-import Paperclip from "vue-material-design-icons/Paperclip.vue";
+import ArrowLeftIcon from "vue-material-design-icons/ArrowLeft.vue";
 import PlusIcon from "vue-material-design-icons/Plus.vue";
 import SendIcon from "vue-material-design-icons/Send.vue";
 
 import { useAuthStore } from "../store/auth-store";
+import { useMessageViewStore } from "../store/messageView-store";
 
+const messageViewStore = useMessageViewStore();
 const authStore = useAuthStore();
 const {
   userDataForChat,
@@ -55,11 +57,17 @@ const sendMessage = async () => {
 </script>
 <template>
   <div
-    class="ml-[420px] w-[calc(100vw-420px)] h-[100vh] fixed text-center bg-gray-300"
+    class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full z-50 h-[100vh] fixed text-center bg-gray-300"
   >
     <div class="w-full flex justify-between items-center bg-black px-4">
       <div class="w-full h-full flex items-center gap-4 px-4 py-2">
-        <div></div>
+        <div>
+          <ArrowLeftIcon
+            fillColor="#ffffff"
+            :size="24"
+            @click="messageViewStore.messageViewOpen = false"
+          />
+        </div>
         <img
           :src="userDataForChat[0].picture"
           class="w-12 h-12 rounded-full"
@@ -79,7 +87,7 @@ const sendMessage = async () => {
 
     <div
       id="MessageSection"
-      class="pt-20 pb-8 z-[-1] overflow-auto touch-auto fixed w-[calc(100vw-420px)] h-[calc(100vh-65px)]"
+      class="pt-20 pb-8 z-[-1] overflow-auto touch-auto fixed md:w-[calc(100vw-420px)] w-full md:h-[calc(100vh-65px)] h-[calc(100vh-85px)]"
     >
       <div v-if="chats && chats.length > 0">
         <!-- Loop through all chats -->
@@ -91,7 +99,7 @@ const sendMessage = async () => {
             <div
               v-for="(msg, msgIndex) in chat"
               :key="msgIndex"
-              class="px-20 text-sm"
+              class="md:px-16 px-4 text-sm"
             >
               <div
                 v-if="msg.senderId !== user.localId"

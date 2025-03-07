@@ -38,7 +38,10 @@ const openChat = async (chat) => {
 </script>
 
 <template>
-  <div id="Messages" class="z-0 pt-1 fixed h-[calc(100vh-100px)] w-[420px]">
+  <div
+    id="Messages"
+    class="z-0 pt-1 overflow-auto h-[calc(100vh-100px)] w-[420px]"
+  >
     <div v-for="chat in chats" :key="chat.id">
       <div @click="openChat(chat)">
         <MessageRowComponent :chat="chat" />

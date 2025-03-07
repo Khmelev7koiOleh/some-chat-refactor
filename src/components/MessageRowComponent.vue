@@ -9,10 +9,11 @@
         />
       </div>
       <div class="w-full">
-        <div class="flex justify-between items-center">
-          <div class="text-white">{{ chat.id }}</div>
-
-          <div class="text-white">{{ chat.messages[0].id }}</div>
+        <div
+          class="flex justify-between items-center"
+          v-for="chat in chat.messages"
+        >
+          <div class="text-white">{{ chat.message }}</div>
         </div>
 
         <div class="flex items-center">

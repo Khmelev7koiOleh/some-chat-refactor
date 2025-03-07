@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
+import LogoutIcon from "vue-material-design-icons/Logout.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import ChatsView from "./ChatsView.vue";
@@ -8,6 +9,9 @@ import FindFriendsView from "./FindFriendsView.vue";
 import { storeToRefs } from "pinia";
 import { ref, onMounted } from "vue";
 import { useAuthStore } from "../store/auth-store";
+import { useMessageViewStore } from "../store/messageView-store";
+
+const messageViewStore = useMessageViewStore();
 
 const authStore = useAuthStore();
 const { userDataForChat, user, showFindFriends } = storeToRefs(authStore);
@@ -20,9 +24,25 @@ onMounted(async () => {
     console.log(error);
   }
 });
+const combinedFunc = async () => {
+  authStore.logout();
+  authStore.logoutPopUpOpen = !authStore.logoutPopUpOpen;
+};
 </script>
 <template>
-  <div class="fixed w-[420px] z-10 bg-gray-800 h-[100vh]">
+  <div class="fixed w-full md:w-[420px] z-40 bg-gray-800 h-[100vh]">
+    <div
+      @click="combinedFunc()"
+      class="text-white cursor-pointer absolute bottom-0 left-[0vw] bg-black w-full h-[50px] flex justify-center items-center gap-2"
+      :class="
+        authStore.logoutPopUpOpen
+          ? '-translate-x-full transition-all duration-1000'
+          : '-translate-x-0   transition-all duration-1000'
+      "
+    >
+      <LogoutIcon fillColor="#FFFFFF" :size="20" class="cursor-pointer" />
+      <p>Logout</p>
+    </div>
     <div class="mx-4 my-4 flex items-center gap-4">
       <div>
         <img
@@ -37,12 +57,14 @@ onMounted(async () => {
       </div>
     </div>
     <div id="Header" class="flex justify-between items-center px-4 py-2 pt-10">
-      <div class="text-xl text-gray-200 font-medium">Chats</div>
+      <div class="text-xl text-gray-200 font-medium">
+        Chats {{ messageViewStore.messageViewOpen }}
+      </div>
 
-      <div class="flex justify-between items-center gap-4">
+      <div class="flex justify-between items-center gap-4 relative">
         <AccountGroupIcon fillColor="#FFFFFF" :size="25" />
         <DotsVerticalIcon
-          @click="authStore.logout"
+          @click="authStore.logoutPopUpOpen = !authStore.logoutPopUpOpen"
           fillColor="#FFFFFF"
           :size="25"
           class="cursor-pointer"
@@ -67,7 +89,7 @@ onMounted(async () => {
         />
       </div>
     </div>
-    <div v-if="!showFindFriends" class="bg-gray-900 h-[100vh]">
+    <div v-if="!showFindFriends" class="bg-gray-900 overflow-auto h-[100vh]">
       <FindFriendsView />
     </div>
 
@@ -75,12 +97,12 @@ onMounted(async () => {
       <ChatsView />
     </div>
   </div>
-  <div v-if="userDataForChat.length">
+  <div v-if="userDataForChat.length && messageViewStore.messageViewOpen">
     <MessageView />
   </div>
   <div
     v-else
-    class="ml-[420px] w-[calc(100vw-420px)] h-[100vh] fixed text-center bg-gray-100"
+    class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full h-[100vh] fixed text-center bg-gray-100"
   >
     <div class="h-full w-full flex flex-col justify-center items-center">
       <div class="grid">
