@@ -33,10 +33,10 @@ const combinedFunc = async () => {
   <div class="fixed w-full md:w-[420px] z-40 bg-gray-800 h-[100vh]">
     <div
       @click="combinedFunc()"
-      class="text-white cursor-pointer absolute top-0 left-0 bg-black w-[1/2] h-[50px] rounded-b-xl flex justify-center items-center gap-2"
+      class="text-white cursor-pointer absolute bottom-10 md:bottom-0 right-0 md:right-0 bg-black w-[100%] h-[70px] rounded-xl flex justify-center items-center gap-2"
       :class="
         authStore.logoutPopUpOpen
-          ? '-translate-x-full transition-all duration-1000'
+          ? '-translate-x-[33vw] transition-all duration-1000'
           : '-translate-x-0  transition-all duration-1000'
       "
     >
