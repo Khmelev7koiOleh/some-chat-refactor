@@ -33,7 +33,7 @@ const combinedFunc = async () => {
   <div class="fixed w-full md:w-[420px] z-40 bg-gray-800 h-[100vh]">
     <div
       @click="combinedFunc()"
-      class="text-white cursor-pointer absolute bottom-0 left-0 bg-black w-full h-[150px] flex justify-center items-center gap-2"
+      class="text-white cursor-pointer absolute bottom-0 left-0 bg-black w-full h-[50px] flex justify-center items-center gap-2"
       :class="
         authStore.logoutPopUpOpen
           ? '-translate-x-full transition-all duration-1000'
