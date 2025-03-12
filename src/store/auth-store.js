@@ -11,9 +11,11 @@ import {
   doc,
   getDoc,
   setDoc,
+  addDoc,
   getDocs,
   collection,
   where,
+  serverTimestamp,
   updateDoc,
   arrayUnion,
   onSnapshot,
@@ -44,6 +46,7 @@ export const useAuthStore = defineStore(
     const showFindFriends = ref(false);
     const currentChat = ref([]);
     const currentChatId = ref(null);
+    const commonChat = ref([]);
 
     const router = useRouter();
 
@@ -165,17 +168,21 @@ export const useAuthStore = defineStore(
         console.error("Error sending message:", error);
       }
     };
-    // const qqq = (id) => {
-    //   console.log(id);
-    //   onSnapshot(doc(db, `chat/${id}`), (doc) => {
-    //     console.log(doc.data());
-    //     let res = [];
-    //     res.push(doc.data());
-    //     console.log(res);
-    //     currentChat.value = res;
-    //     console.log(id);
-    //   });
-    // };
+    const sendToCommonChat = async (userId) => {
+      if (!message.value.trim()) return;
+
+      try {
+        await addDoc(collection(db, "chat"), {
+          text: message.value,
+          userId: userId, // Sender's ID
+          createdAt: serverTimestamp(),
+        });
+
+        message.value = ""; // Clear input after sending
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
+    };
 
     const getChatById = async (userId1, userId2) => {
       const chatsRef = collection(db, "chats");
@@ -227,6 +234,21 @@ export const useAuthStore = defineStore(
         console.log(chats.value); // Now logs an array
       });
     };
+
+    const getCommonChatsByUser = () => {
+      const q = query(collection(db, "chat"));
+
+      onSnapshot(q, (querySnapshot) => {
+        const chatArray = []; // Temporary array to hold chats
+
+        querySnapshot.forEach((doc) => {
+          chatArray.push(doc.data());
+        });
+
+        commonChat.value = chatArray; // Update `chats` ref
+        console.log(commonChat.value); // Now logs an array
+      });
+    };
     const logout = async () => {
       try {
         await signOut(auth);
@@ -239,7 +261,7 @@ export const useAuthStore = defineStore(
           lastLoginAt: null,
           lastRefreshAt: null,
         };
-
+        logoutPopUpOpen.value = false;
         router.push("/login");
         console.log("User logged out successfully.");
       } catch (error) {
@@ -287,8 +309,11 @@ export const useAuthStore = defineStore(
       sendMessage,
       currentChatId,
       currentChat,
+      getCommonChatsByUser,
+      commonChat,
       getAllChatsByUser,
       getChatById,
+      sendToCommonChat,
       chats,
     };
   },

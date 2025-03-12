@@ -8,6 +8,9 @@ import CheckAllIcon from "vue-material-design-icons/CheckAll.vue";
 import { useAuthStore } from "../store/auth-store";
 import { onMounted } from "vue";
 import { useMessageViewStore } from "../store/messageView-store";
+import { useCommonChatStore } from "../store/common-chat-store";
+
+const commonChatStore = useCommonChatStore();
 
 const messageViewStore = useMessageViewStore();
 
@@ -47,7 +50,14 @@ const openChat = async (user) => {
   } catch (error) {
     console.error("Error fetching chat:", error);
   }
-  messageViewStore.messageViewOpen = !messageViewStore.messageViewOpen;
+  commonChatStore.onCommonChat = false;
+  watch(user, (newVal, oldVal) => {
+    if (newVal === oldVal) {
+      return;
+    } else {
+      messageViewStore.messageViewOpen = !messageViewStore.messageViewOpen;
+    }
+  });
 };
 </script>
 <template>
@@ -56,7 +66,7 @@ const openChat = async (user) => {
       <div
         v-if="hideMyChat(user.uid)"
         @click="createNewChat(user)"
-        class="w-full flex items-center px-4 py-3 cursor-pointer"
+        class="w-full bg-gray-900 flex items-center overflow-auto rounded-lg m-1 px-4 py-3 cursor-pointer hover:bg-gray-800"
       >
         <div>
           <img

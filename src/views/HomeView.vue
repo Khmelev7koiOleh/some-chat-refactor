@@ -4,22 +4,29 @@ import LogoutIcon from "vue-material-design-icons/Logout.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import ChatsView from "./ChatsView.vue";
+import CommonChat from "./CommonChat.vue";
 import MessageView from "./MessageView.vue";
 import FindFriendsView from "./FindFriendsView.vue";
 import { storeToRefs } from "pinia";
 import { ref, onMounted } from "vue";
 import { useAuthStore } from "../store/auth-store";
 import { useMessageViewStore } from "../store/messageView-store";
+import CommonMessageView from "../components/CommonMessageView.vue";
+import DefaultView from "../components/DefaultView.vue";
+import { useCommonChatStore } from "../store/common-chat-store";
+const commonChatStore = useCommonChatStore();
 
 const messageViewStore = useMessageViewStore();
 
 const authStore = useAuthStore();
-const { userDataForChat, user, showFindFriends } = storeToRefs(authStore);
+const { userDataForChat, user, showFindFriends, commonChat } =
+  storeToRefs(authStore);
 
 onMounted(async () => {
   try {
     authStore.getAllUsers();
-    await authStore.getAllChatsByUser();
+    authStore.getAllChatsByUser();
+    authStore.getCommonChatsByUser();
   } catch (error) {
     console.log(error);
   }
@@ -30,7 +37,7 @@ const combinedFunc = async () => {
 };
 </script>
 <template>
-  <div class="fixed w-full md:w-[420px] z-40 bg-gray-800 h-[100vh]">
+  <div class="fixed w-full md:w-[420px] z-40 bg-gray-900 h-[100vh]">
     <div
       @click="combinedFunc()"
       class="text-white cursor-pointer absolute top-0 md:bottom-0 right-0 md:right-0 bg-gray-900 w-[100%] h-[70px] md:h-[70px] flex justify-center items-center gap-2"
@@ -87,7 +94,8 @@ const combinedFunc = async () => {
         />
       </div>
     </div>
-    <div v-if="!showFindFriends" class="bg-gray-900 overflow-auto h-[100vh]">
+    <div class="bg-gray-900"><CommonChat /></div>
+    <div v-if="!showFindFriends" class="overflow-auto h-[100vh]">
       <FindFriendsView />
     </div>
 
@@ -95,29 +103,22 @@ const combinedFunc = async () => {
       <ChatsView />
     </div>
   </div>
-  <div v-if="userDataForChat.length && messageViewStore.messageViewOpen">
-    <MessageView />
-  </div>
-  <div
-    v-else
-    class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full h-[100vh] fixed text-center bg-gray-100"
-  >
-    <div class="h-full w-full flex flex-col justify-center items-center">
-      <div class="grid">
-        <div class="w-full h-full flex justify-center items-center">
-          <img
-            src="/public/w-web-not-loaded-chat.png"
-            class=""
-            alt=""
-            width="575"
-          />
-        </div>
-        <div>
-          <div class="text-3xl text-gray-500 font-medium mt-10">Some Chat</div>
-          <div class="text-sm text-gray-500 font-light mt-4">
-            Send and receive your messages without keeping your phone online.
-          </div>
-        </div>
+  <div>
+    <div
+      class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full h-[100vh] text-center bg-gray-100"
+      v-if="commonChatStore.onCommonChat"
+    >
+      <CommonMessageView :commonChat="commonChat" />
+    </div>
+    <div v-else>
+      <div v-if="userDataForChat.length && messageViewStore.messageViewOpen">
+        <MessageView />
+      </div>
+      <div
+        v-else
+        class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full h-[100vh] fixed text-center bg-gray-100"
+      >
+        <DefaultView />
       </div>
     </div>
   </div>

@@ -8,7 +8,7 @@ const routes = [
     path: "/",
     component: HomeView,
     meta: { requiresAuth: true },
-    beforeEnter: authGuard,
+    // beforeEnter: authGuard,
   },
   {
     path: "/login",
