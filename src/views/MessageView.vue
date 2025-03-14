@@ -41,7 +41,7 @@ const chatContainerId = "MessageSection";
 const { scrollToLastMessage } = useScrollTo();
 
 let message = ref("");
-
+let changeThemeOpen = ref(false);
 watchEffect(() => {
   console.log(currentChat);
 });
@@ -66,11 +66,8 @@ scrollToLastMessage(chatContainerId);
 watch(currentChat, () => {
   scrollToLastMessage(chatContainerId);
 });
-onBeforeMount(() => {
-  changeBackground();
-});
+
 onMounted(() => {
-  changeBackground();
   console.log(random);
   console.log(random.value);
 
@@ -106,12 +103,31 @@ onMounted(() => {
         <div class="text-white">{{ userDataForChat[0].name }}</div>
       </div>
 
-      <div>
-        <DotsVerticalIcon
-          fillColor="#ffffff"
-          :size="24"
-          class="flex items-center justify-center"
-        />
+      <div class="flex justify-center items-center">
+        <div class="">
+          <div class="flex items-center justify-end">
+            <DotsVerticalIcon
+              @click="changeThemeOpen = !changeThemeOpen"
+              fillColor="#ffffff"
+              :size="24"
+              class="flex w-full h-full items-center justify-end cursor-pointer"
+            />
+          </div>
+
+          <div
+            :class="
+              changeThemeOpen
+                ? 'text-white fixed top-0 right-0 translate-y-[60px] duration-1000 px-4 py-4 bg-gray-950 flex flex-col rounded-md gap-3 '
+                : 'text-white fixed top-0 right-0 translate-y-[-100vh] duration-1000 px-4 py-1 bg-gray-950 flex flex-col rounded-md gap-3'
+            "
+          >
+            <button @click="changeBackground">Change the theme</button>
+            <button @click="changeBackground">Change the theme</button>
+            <button @click="changeBackground">Change the theme</button>
+            <button @click="changeBackground">Change the theme</button>
+            <button @click="changeBackground">Change the theme</button>
+          </div>
+        </div>
       </div>
     </div>
 

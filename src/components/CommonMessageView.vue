@@ -92,44 +92,56 @@ onMounted(() => {
 
 <template>
   <div
-    class="z-[50] overflow-auto touch-auto fixed md:w-[calc(100vw-420px)] w-full md:h-[calc(100vh-65px)]"
+    class="z-[50] overflow-auto touch-auto fixed md:w-[calc(100%-420px)] w-full md:h-[calc(100vh-65px)]"
   >
-    <div class="w-full z-50 fixed text-center">
+    <div class="w-[100%] md:w-[calc(100%-420px)] z-50 fixed text-center">
       <div
-        class="w-full h-[70px] flex justify-between items-center bg-black px-4 mb-[70px]"
+        class="w-[100%] flex justify-between items-center bg-black mb-[70px]"
       >
-        <div class="w-full h-full flex items-center gap-4 px-4 py-2">
-          <div>
-            <ArrowLeftIcon
-              fillColor="#ffffff"
-              :size="24"
-              @click="commonChatStore.onCommonChat = false"
-            />
-          </div>
-          <div>
-            <img
-              :src="`https://picsum.photos/id/699/200/300`"
-              alt=""
-              class="w-12 h-12 rounded-full mr-0"
-            />
-          </div>
-          <div class="text-white">Common chat</div>
-          <div class="flex items-center justify-start">
-            <DotsVerticalIcon
-              @click="changeThemeOpen = !changeThemeOpen"
-              fillColor="#ffffff"
-              :size="24"
-              class="flex items-center justify-center"
-            />
+        <div class="w-[100%] flex items-center justify-between gap-4 px-4 py-2">
+          <div class="flex items-center justify-start gap-4">
+            <div>
+              <ArrowLeftIcon
+                fillColor="#ffffff"
+                :size="24"
+                @click="commonChatStore.onCommonChat = false"
+              />
+            </div>
+            <div>
+              <img
+                :src="`https://picsum.photos/id/699/200/300`"
+                alt=""
+                class="w-12 h-12 rounded-full mr-0"
+              />
+            </div>
+            <div class="text-white">Common chat</div>
           </div>
 
-          <div v-if="changeThemeOpen">
-            <button
-              @click="changeBackground"
-              class="w-[200px] h-[40px] bg-gray-800 text-white"
-            >
-              Change the theme
-            </button>
+          <div class="flex justify-center items-center">
+            <div class="">
+              <div class="flex items-center justify-end">
+                <DotsVerticalIcon
+                  @click="changeThemeOpen = !changeThemeOpen"
+                  fillColor="#ffffff"
+                  :size="24"
+                  class="flex w-full h-full items-center justify-end cursor-pointer"
+                />
+              </div>
+
+              <div
+                :class="
+                  changeThemeOpen
+                    ? 'text-white fixed top-0 right-0 translate-y-[60px] duration-1000 px-4 py-4 bg-gray-950 flex flex-col rounded-md gap-3 '
+                    : 'text-white fixed top-0 right-0 translate-y-[-100vh] duration-1000 px-4 py-1 bg-gray-950 flex flex-col rounded-md gap-3'
+                "
+              >
+                <button @click="changeBackground">Change the theme</button>
+                <button @click="changeBackground">Change the theme</button>
+                <button @click="changeBackground">Change the theme</button>
+                <button @click="changeBackground">Change the theme</button>
+                <button @click="changeBackground">Change the theme</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

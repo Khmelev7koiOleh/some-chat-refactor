@@ -11,6 +11,8 @@ import { onMounted } from "vue";
 import { useMessageViewStore } from "../store/messageView-store";
 import { useCommonChatStore } from "../store/common-chat-store";
 import { useScrollTo } from "../composables/scrollTo";
+import { useChangeBackground } from "../composables/changeBackground";
+const { changeBackground, random } = useChangeBackground();
 const commonChatStore = useCommonChatStore();
 const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
@@ -37,6 +39,7 @@ const hideMyChat = (data) => {
   }
 };
 const openChat = async (user) => {
+  changeBackground();
   console.log("Opening chat:", thisUser.value.localId);
   scrollToLastMessage();
   userDataForChat.value = [
@@ -53,6 +56,7 @@ const openChat = async (user) => {
     console.error("Error fetching chat:", error);
   }
   commonChatStore.onCommonChat = false;
+  changeBackground();
 
   if (false) {
     messageViewOpen.value = !messageViewOpen.value;
