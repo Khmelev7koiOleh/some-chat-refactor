@@ -22,7 +22,8 @@ import { useScrollTo } from "../composables/scrollTo";
 import { useAuthStore } from "../store/auth-store";
 import { useMessageViewStore } from "../store/messageView-store";
 import ScrollToBottomButton from "../components/ScrollToBottomButton.vue";
-
+import { useChangeBackground } from "../composables/changeBackground";
+const { changeBackground, random } = useChangeBackground();
 const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
 const authStore = useAuthStore();
@@ -61,15 +62,18 @@ const sendMessage = async () => {
   message.value = ""; // Clear input after sending
 };
 
-const random = computed(() => Math.floor(Math.random() * 300));
 scrollToLastMessage(chatContainerId);
 watch(currentChat, () => {
   scrollToLastMessage(chatContainerId);
 });
 onBeforeMount(() => {
-  random;
+  changeBackground();
 });
 onMounted(() => {
+  changeBackground();
+  console.log(random);
+  console.log(random.value);
+
   setTimeout(() => {
     scrollToLastMessage(chatContainerId);
   }, 100);

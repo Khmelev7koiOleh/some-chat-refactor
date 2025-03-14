@@ -32,6 +32,8 @@ import { useCommonChatStore } from "../store/common-chat-store";
 import { useMessageViewStore } from "../store/messageView-store";
 import { useAuthStore } from "../store/auth-store";
 import { useScrollTo } from "../composables/scrollTo";
+import { useChangeBackground } from "../composables/changeBackground";
+const { changeBackground, random } = useChangeBackground();
 
 const props = defineProps({
   chat: { type: Object },
@@ -50,6 +52,7 @@ const chatContainerId = "MessageSection";
 
 const { scrollToLastMessage } = useScrollTo();
 let message = ref("");
+let changeThemeOpen = ref(false);
 const getChatsSize = document.getElementById("MessageSection");
 const sendToCommonChat = async () => {
   if (!message.value.trim()) return;
@@ -111,14 +114,23 @@ onMounted(() => {
             />
           </div>
           <div class="text-white">Common chat</div>
-        </div>
+          <div class="flex items-center justify-start">
+            <DotsVerticalIcon
+              @click="changeThemeOpen = !changeThemeOpen"
+              fillColor="#ffffff"
+              :size="24"
+              class="flex items-center justify-center"
+            />
+          </div>
 
-        <div>
-          <DotsVerticalIcon
-            fillColor="#ffffff"
-            :size="24"
-            class="flex items-center justify-center"
-          />
+          <div v-if="changeThemeOpen">
+            <button
+              @click="changeBackground"
+              class="w-[200px] h-[40px] bg-gray-800 text-white"
+            >
+              Change the theme
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -128,8 +140,13 @@ onMounted(() => {
       v-if="chat.length"
       class="w-full flex min-h-[100vh)] overflow-auto touch-auto h-[100vh] justify-end items-start cursor-pointer"
     >
+      <img
+        class="w-full md:w-[calc(100vw-420px)] h-full fixed z-[-1]"
+        :src="`https://picsum.photos/id/${random}/200/300`"
+        alt=""
+      />
       <div
-        class="w-full bg-gray-300 flex flex-col justify-between items-end pb-[150px] md:pb-[150px]"
+        class="w-full flex flex-col justify-between items-end pb-[150px] md:pb-[150px]"
       >
         <ScrollToBottomButton :container="chatContainerId" />
         <div
