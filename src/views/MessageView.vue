@@ -66,7 +66,9 @@ scrollToLastMessage(chatContainerId);
 watch(currentChat, () => {
   scrollToLastMessage(chatContainerId);
 });
-
+onBeforeMount(() => {
+  changeBackground();
+});
 onMounted(() => {
   console.log(random);
   console.log(random.value);

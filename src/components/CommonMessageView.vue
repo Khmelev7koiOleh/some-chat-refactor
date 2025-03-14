@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toRefs, ref, computed, watch, onMounted } from "vue";
+import { toRefs, ref, computed, watch, onMounted, onBeforeMount } from "vue";
 
 import moment from "moment";
 import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
@@ -82,6 +82,9 @@ const sortedMessages = computed(() => {
 });
 watch(chat, () => {
   scrollToLastMessage(chatContainerId);
+});
+onBeforeMount(() => {
+  changeBackground();
 });
 onMounted(() => {
   setTimeout(() => {
