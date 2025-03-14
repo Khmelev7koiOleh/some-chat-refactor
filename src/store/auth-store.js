@@ -22,7 +22,7 @@ import {
   query,
   Timestamp,
 } from "firebase/firestore";
-
+import { Peer } from "peerjs"; // Install PeerJS: npm install peerjs
 import { useMessageViewStore } from "../store/messageView-store";
 
 const provider = new GoogleAuthProvider();
@@ -45,7 +45,9 @@ export const useAuthStore = defineStore(
     const logoutPopUpOpen = ref(false);
     const allUsers = ref([]);
     const userDataForChat = ref([]);
+    const peerId = ref("");
     const chats = ref([]);
+    const peerUsers = ref([]);
     const showFindFriends = ref(false);
     const currentChat = ref([]);
     const currentChatId = ref(null);
@@ -94,6 +96,7 @@ export const useAuthStore = defineStore(
         }
 
         setUser(result.user);
+        generatePeerId(result.user.uid);
         router.push("/");
       } catch (error) {
         console.error("Login failed:", error);
@@ -279,6 +282,74 @@ export const useAuthStore = defineStore(
         }
       );
     };
+    const generatePeerId = async (userId) => {
+      const peer = new Peer(); // Create a PeerJS instance
+
+      peer.on("open", async (id) => {
+        console.log("Generated Peer ID:", id);
+
+        if (!userId) {
+          console.error("User ID is missing!");
+          return;
+        }
+
+        // Save the Peer ID to Firestore
+        await setDoc(doc(db, "peerIDs", userId), {
+          peerId: id,
+          createdAt: new Date(),
+        });
+      });
+
+      // ✅ Handle Incoming Calls
+      peer.on("call", (call) => {
+        navigator.mediaDevices
+          .getUserMedia({ video: true, audio: true })
+          .then((stream) => {
+            call.answer(stream); // Answer the call with user's stream
+
+            call.on("stream", (remoteStream) => {
+              document.getElementById("remoteVideo").srcObject = remoteStream;
+            });
+          })
+          .catch((error) => console.error("Error getting user media", error));
+      });
+    };
+
+    const fetchPeerIDs = () => {
+      onSnapshot(collection(db, "peerIDs"), (snapshot) => {
+        peerUsers.value = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("Available Users:", peerUsers.value);
+      });
+    };
+    const callUser = (targetPeerId) => {
+      const peer = new Peer(); // Create a new PeerJS instance
+
+      peer.on("open", (id) => {
+        console.log("Your Peer ID:", id);
+
+        const mediaConstraints = { video: true, audio: true };
+
+        navigator.mediaDevices
+          .getUserMedia(mediaConstraints)
+          .then((stream) => {
+            console.log("Got user media stream", stream);
+
+            const call = peer.call(targetPeerId, stream); // Call the target user
+
+            call.on("stream", (remoteStream) => {
+              // Show the remote video
+              document.getElementById("remoteVideo").srcObject = remoteStream;
+            });
+          })
+          .catch((error) =>
+            console.error("Error accessing media devices", error)
+          );
+      });
+    };
+
     const logout = async () => {
       try {
         await signOut(auth);
@@ -298,49 +369,25 @@ export const useAuthStore = defineStore(
         console.error("Logout failed:", error);
       }
     };
-    // const getChatById = (id) => {
-    //     onSnapshot(doc(db, `chat/${id}`), (doc) => {
-    //       currentChatId.value = doc.data(); // Directly store the document data
-    //     });
-    //   };
 
-    //   const reset = () => {
-    //     localId.value = "";
-    //     email.value = "";
-    //     displayName.value = "";
-    //     photoUrl.value = "";
-    //     allUsers.value = [];
-    //     userDataForChat.value = [];
-    //     showFindFriends.value = false;
-    //   };
-
-    //   watchEffect(() => {
-    //     if (user.value.localId) {
-    //       const userRef = doc(db, "users", user.value.localId);
-    //       const unsubscribe = onSnapshot(userRef, (doc) => {
-    //         if (doc.exists()) {
-    //           setUser(doc.data());
-    //         } else {
-    //           console.log("User not found in Firestore.");
-    //         }
-    //       });
-    //       return unsubscribe;
-    //     }
-    //   });
     return {
       user,
       login,
+      fetchPeerIDs,
       logout,
       getAllUsers,
       allUsers,
       userDataForChat,
       showFindFriends,
+      generatePeerId,
       logoutPopUpOpen,
       sendMessage,
       currentChatId,
       currentChat,
       getCommonChatsByUser,
       commonChat,
+      callUser,
+      peerUsers,
       getAllChatsByUser,
       getChatById,
       sendToCommonChat,

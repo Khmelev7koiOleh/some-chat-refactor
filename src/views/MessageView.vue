@@ -10,11 +10,12 @@ import {
 } from "vue";
 import moment from "moment";
 import { storeToRefs } from "pinia";
-
+import VideoCall from "../components/VideoCall.vue";
 import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import EmoticonExcitedOutlineIcon from "vue-material-design-icons/EmoticonExcitedOutline.vue";
+import VideoIcon from "vue-material-design-icons/Video.vue";
 import ArrowLeftIcon from "vue-material-design-icons/ArrowLeft.vue";
 import PlusIcon from "vue-material-design-icons/Plus.vue";
 import SendIcon from "vue-material-design-icons/Send.vue";
@@ -35,7 +36,7 @@ const {
   currentChatId,
   currentChat,
   showFindFriends,
-
+  peerUsers,
   chats,
 } = storeToRefs(authStore);
 const chatContainerId = "MessageSection";
@@ -44,6 +45,7 @@ const { scrollToLastMessage } = useScrollTo();
 
 let message = ref("");
 let changeThemeOpen = ref(false);
+let videoCallOpen = ref(false);
 watchEffect(() => {
   console.log(currentChat);
 });
@@ -110,7 +112,13 @@ onMounted(() => {
         />
         <div class="text-white">{{ userDataForChat[0].name }}</div>
       </div>
-
+      <div @click="videoCallOpen = !videoCallOpen">
+        <VideoIcon
+          fillColor="#ffffff"
+          :size="24"
+          class="flex w-full h-full items-center justify-end cursor-pointer"
+        />
+      </div>
       <div class="flex justify-center items-center">
         <div class="">
           <div class="flex items-center justify-end">
@@ -139,6 +147,26 @@ onMounted(() => {
       </div>
     </div>
 
+    <div v-if="videoCallOpen">
+      <div class="absolute w-1/3 h-1/2 top-[20%] left-[33%] center z-[-0]">
+        <div class="flex items-center justify-center">
+          <VideoCall />
+        </div>
+      </div>
+      <div>
+        <h2>Available Users</h2>
+        <div class="text-white">
+          {{ peerUsers }}
+        </div>
+        <ul>
+          <li v-for="user in peerUsers" :key="user.id">
+            <button @click="callUser(user.peerId)">Call {{ user.id }}</button>
+          </li>
+        </ul>
+
+        <video id="remoteVideo" autoplay></video>
+      </div>
+    </div>
     <div
       id="MessageSection"
       class="w-full min-h-[calc(100vh-150px))] overflow-auto touch-auto h-[calc(100vh-200px)] justify-end items-start cursor-pointer"
