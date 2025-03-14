@@ -243,18 +243,17 @@ export const useAuthStore = defineStore(
     };
 
     const getCommonChatsByUser = () => {
-      // Query to fetch all the messages without ordering by 'createdAt' in Firestore
+      // Query to fetch all the messages
       const q = query(collection(db, "chat"));
 
       onSnapshot(
         q,
         (querySnapshot) => {
-          const chatArray = []; // Temporary array to hold chat data
+          const chatArray = [];
 
           querySnapshot.forEach((doc) => {
             const data = doc.data();
 
-            // Handle 'createdAt' and ensure it is a Date object
             const createdAt =
               data.createdAt instanceof Date
                 ? data.createdAt // If it's already a Date, keep it

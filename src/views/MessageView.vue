@@ -63,7 +63,7 @@ onMounted(() => {
 
 watchEffect(
   () => {
-    if (currentChat) {
+    if (currentChat.length) {
       setTimeout(() => {
         scrollToLastMessage();
       }, 100);
@@ -104,7 +104,7 @@ watchEffect(
 
     <div
       id="MessageSection"
-      class="pt-20 z-[-1] overflow-auto touch-auto fixed md:w-[calc(100vw-420px)] w-full md:h-[calc(100vh-65px)] min-h-[calc(100vh-150px)] h-[calc(100vh-150px)]"
+      class="pt-20 z-[-1] overflow-auto touch-auto fixed md:w-[calc(100vw-420px)] w-full md:h-[calc(100vh-65px)] min-h-[100vh] h-[100vh] pb-[180px]"
     >
       <div v-if="chats && chats.length > 0">
         <!-- Loop through all chats -->

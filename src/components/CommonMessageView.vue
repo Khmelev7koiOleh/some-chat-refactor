@@ -105,10 +105,10 @@ const { chat } = toRefs(props);
 
     <div
       v-if="chat.length"
-      class="w-full flex min-h-[calc(100vh-50px)] h-[calc(100vh-65px)] justify-end items-start cursor-pointer"
+      class="w-full flex min-h-[100vh)] h-[100vh] justify-end items-start cursor-pointer"
     >
       <div
-        class="w-full bg-gray-300 flex flex-col justify-between items-end py-20"
+        class="w-full bg-gray-300 flex flex-col justify-between items-end pb-[180px] md:pb-[150px]"
       >
         <div
           class="w-full p-4"
