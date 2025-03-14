@@ -14,7 +14,6 @@ import { useScrollTo } from "../composables/scrollTo";
 const commonChatStore = useCommonChatStore();
 const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
-const chatContainerId = "MessageSection";
 
 const { scrollToLastMessage } = useScrollTo();
 const authStore = useAuthStore();
@@ -39,7 +38,7 @@ const hideMyChat = (data) => {
 };
 const openChat = async (user) => {
   console.log("Opening chat:", thisUser.value.localId);
-
+  scrollToLastMessage();
   userDataForChat.value = [
     {
       id: user.uid,
@@ -54,6 +53,7 @@ const openChat = async (user) => {
     console.error("Error fetching chat:", error);
   }
   commonChatStore.onCommonChat = false;
+
   if (false) {
     messageViewOpen.value = !messageViewOpen.value;
   } else messageViewOpen.value = true;

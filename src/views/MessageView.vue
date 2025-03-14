@@ -2,7 +2,7 @@
 import { ref, computed, watchEffect, onMounted, nextTick, watch } from "vue";
 import moment from "moment";
 import { storeToRefs } from "pinia";
-
+import ArrowDown from "vue-material-design-icons/ArrowDown.vue";
 import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
@@ -96,6 +96,12 @@ onMounted(() => {
       id="MessageSection"
       class="pt-20 z-[-1] overflow-auto touch-auto fixed md:w-[calc(100vw-420px)] w-full md:h-[calc(100vh-65px)] min-h-[100vh] h-[100vh] pb-[180px]"
     >
+      <div
+        class="fixed bottom-[12vh] right-10 bg-gray-400 p-1 rounded-full"
+        @click="scrollToLastMessage(chatContainerId)"
+      >
+        <ArrowDown fillCollor="#ffffff" />
+      </div>
       <div v-if="chats && chats.length > 0">
         <!-- Loop through all chats -->
         <div v-for="(chat, chatIndex) in currentChat" :key="chatIndex">
