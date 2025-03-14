@@ -1,6 +1,7 @@
 <template>
   <div class="">
     <div
+      v-if="container"
       class="fixed bottom-[12vh] right-10 bg-gray-400 p-1 rounded-full"
       @click="scrollToLastMessage(container)"
     >

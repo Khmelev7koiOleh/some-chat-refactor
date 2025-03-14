@@ -7,6 +7,7 @@ import EmoticonExcitedOutlineIcon from "vue-material-design-icons/EmoticonExcite
 import ArrowLeftIcon from "vue-material-design-icons/ArrowLeft.vue";
 import PlusIcon from "vue-material-design-icons/Plus.vue";
 import SendIcon from "vue-material-design-icons/Send.vue";
+import ScrollToBottomButton from "../components/ScrollToBottomButton.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import CheckAllIcon from "vue-material-design-icons/CheckAll.vue";
@@ -130,6 +131,7 @@ onMounted(() => {
       <div
         class="w-full bg-gray-300 flex flex-col justify-between items-end pb-[150px] md:pb-[150px]"
       >
+        <ScrollToBottomButton :container="chatContainerId" />
         <div
           class="w-full p-4"
           v-for="(chat, chatIndex) in sortedMessages"

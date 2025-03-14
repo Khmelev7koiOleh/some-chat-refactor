@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, watchEffect, onMounted, nextTick, watch } from "vue";
+import {
+  ref,
+  computed,
+  watchEffect,
+  onMounted,
+  nextTick,
+  watch,
+  onBeforeMount,
+} from "vue";
 import moment from "moment";
 import { storeToRefs } from "pinia";
 
@@ -53,9 +61,13 @@ const sendMessage = async () => {
   message.value = ""; // Clear input after sending
 };
 
+const random = computed(() => Math.floor(Math.random() * 300));
 scrollToLastMessage(chatContainerId);
 watch(currentChat, () => {
   scrollToLastMessage(chatContainerId);
+});
+onBeforeMount(() => {
+  random;
 });
 onMounted(() => {
   setTimeout(() => {
@@ -67,6 +79,12 @@ onMounted(() => {
   <div
     class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full z-50 h-[100%] fixed text-center bg-gray-300"
   >
+    <img
+      class="w-full md:w-[calc(100vw-420px)] h-full fixed z-[-1]"
+      :src="`https://picsum.photos/id/${random}/200/300`"
+      alt=""
+    />
+
     <div class="w-full flex justify-between items-center bg-black px-4">
       <div class="w-full h-full flex items-center gap-4 px-4 py-2">
         <div>
@@ -95,7 +113,7 @@ onMounted(() => {
 
     <div
       id="MessageSection"
-      class="pt-20 z-[-1] overflow-auto touch-auto fixed md:w-[calc(100vw-420px)] w-full md:h-[calc(100vh-65px)] min-h-[100vh] h-[100vh] pb-[180px]"
+      class="w-full min-h-[calc(100vh-150px))] overflow-auto touch-auto h-[calc(100vh-150px)] justify-end items-start cursor-pointer"
     >
       <ScrollToBottomButton :container="chatContainerId" />
 
