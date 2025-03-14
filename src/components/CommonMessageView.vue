@@ -105,7 +105,7 @@ const { chat } = toRefs(props);
 
     <div
       v-if="chat.length"
-      class="w-full flex min-h-[calc(100vh-50px)] h-[calc(100vh-50px)] justify-end items-start cursor-pointer"
+      class="w-full flex min-h-[calc(100vh-50px)] h-[calc(100vh-65px)] justify-end items-start cursor-pointer"
     >
       <div
         class="w-full bg-gray-300 flex flex-col justify-between items-end py-20"
@@ -122,7 +122,7 @@ const { chat } = toRefs(props);
                 : 'w-[90%] flex flex-col justify-center items-start'
             "
           >
-            <div class="flex justify-center items-center">
+            <div class="flex">
               <div v-if="chat.senderId !== thisUser.localId">
                 <img
                   :src="chat.img"
