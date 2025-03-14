@@ -135,7 +135,7 @@ onMounted(() => {
 
     <div
       id="MessageSection"
-      class="w-full min-h-[calc(100vh-150px))] overflow-auto touch-auto h-[calc(100vh-150px)] justify-end items-start cursor-pointer"
+      class="w-full min-h-[calc(100vh-150px))] overflow-auto touch-auto h-[calc(100vh-190px)] justify-end items-start cursor-pointer"
     >
       <ScrollToBottomButton :container="chatContainerId" />
 
