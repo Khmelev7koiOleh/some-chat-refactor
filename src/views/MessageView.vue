@@ -23,6 +23,8 @@ import { useAuthStore } from "../store/auth-store";
 import { useMessageViewStore } from "../store/messageView-store";
 import ScrollToBottomButton from "../components/ScrollToBottomButton.vue";
 import { useChangeBackground } from "../composables/changeBackground";
+import EmojiPicker from "vue3-emoji-picker";
+import "vue3-emoji-picker/css";
 const { changeBackground, random } = useChangeBackground();
 const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
@@ -45,7 +47,11 @@ let changeThemeOpen = ref(false);
 watchEffect(() => {
   console.log(currentChat);
 });
+const showPicker = ref(false);
 
+const addEmoji = (emoji) => {
+  message.value += emoji.i; // Append the selected emoji to the input
+};
 const sendMessage = async () => {
   if (!message.value.trim()) return; // Prevent sending empty messages
 
@@ -211,11 +217,20 @@ onMounted(() => {
             :size="24"
             class="flex items-center justify-center rotate-45"
           />
-          <EmoticonExcitedOutlineIcon
-            fillColor="#FFFFFF"
-            :size="24"
-            class="flex items-center justify-center"
-          />
+
+          <div class="w-[40px] h-full">
+            <button @click="showPicker = !showPicker">
+              <EmoticonExcitedOutlineIcon
+                fillColor="#FFFFFF"
+                :size="24"
+                class="flex items-center justify-center"
+              />
+            </button>
+
+            <div class="absolute bottom-[10vh] left-0">
+              <EmojiPicker v-if="showPicker" @select="addEmoji" />
+            </div>
+          </div>
         </div>
 
         <input
