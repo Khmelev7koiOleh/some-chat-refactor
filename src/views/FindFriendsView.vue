@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, watchEffect, watch } from "vue";
 import { storeToRefs } from "pinia";
 import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
@@ -11,8 +12,8 @@ import { useMessageViewStore } from "../store/messageView-store";
 import { useCommonChatStore } from "../store/common-chat-store";
 
 const commonChatStore = useCommonChatStore();
-
 const messageViewStore = useMessageViewStore();
+const { messageViewOpen } = storeToRefs(messageViewStore);
 
 const authStore = useAuthStore();
 const { userDataForChat, localId, user: thisUser } = storeToRefs(authStore);
@@ -51,13 +52,9 @@ const openChat = async (user) => {
     console.error("Error fetching chat:", error);
   }
   commonChatStore.onCommonChat = false;
-  watch(user, (newVal, oldVal) => {
-    if (newVal === oldVal) {
-      return;
-    } else {
-      messageViewStore.messageViewOpen = !messageViewStore.messageViewOpen;
-    }
-  });
+  if (false) {
+    messageViewOpen.value = !messageViewOpen.value;
+  } else messageViewOpen.value = true;
 };
 </script>
 <template>

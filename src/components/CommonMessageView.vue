@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { toRefs, ref } from "vue";
+import { toRefs, ref, computed } from "vue";
 
 import moment from "moment";
 import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
-
 import EmoticonExcitedOutlineIcon from "vue-material-design-icons/EmoticonExcitedOutline.vue";
 import ArrowLeftIcon from "vue-material-design-icons/ArrowLeft.vue";
 import PlusIcon from "vue-material-design-icons/Plus.vue";
@@ -26,6 +25,7 @@ import {
   arrayUnion,
   onSnapshot,
   query,
+  Timestamp,
 } from "firebase/firestore";
 import { useCommonChatStore } from "../store/common-chat-store";
 import { useMessageViewStore } from "../store/messageView-store";
@@ -42,8 +42,7 @@ const sendToCommonChat = async () => {
   try {
     await addDoc(collection(db, "chat"), {
       text: message.value,
-      //   userId: uuid(), // Sender's ID
-      createdAt: serverTimestamp(),
+      createdAt: Timestamp.now(), // Store as Firestore Timestamp
       sender: thisUser.value.displayName,
       senderId: thisUser.value.localId,
       img: thisUser.value.photoUrl,
@@ -54,25 +53,24 @@ const sendToCommonChat = async () => {
     console.error("Error sending message:", error);
   }
 };
-const openChat = async () => {
-  console.log("Opening chat:", thisUser.value.localId);
-
-  try {
-    await authStore.openCommonChat(user.uid, thisUser.value.localId); // Use `authStore.openCommonChat`
-  } catch (error) {
-    console.error("Error fetching chat:", error);
-  }
-
-  commonChatStore.onCommonChat = true;
-};
-const props = defineProps({
-  commonChat: { type: Object },
+const sortedMessages = computed(() => {
+  return [...chat.value].sort((a, b) => {
+    // Convert string timestamps to Date objects using moment
+    const timeA = moment(a.createdAt, "MMMM Do YYYY, h:mm a").toDate();
+    const timeB = moment(b.createdAt, "MMMM Do YYYY, h:mm a").toDate();
+    return timeA.getTime() - timeB.getTime(); // Ascending order: earliest first
+  });
 });
-const { commonChat } = toRefs(props);
+const props = defineProps({
+  chat: { type: Object },
+});
+const { chat } = toRefs(props);
 </script>
 
 <template>
-  <div>
+  <div
+    class="z-[50] overflow-auto touch-auto fixed md:w-[calc(100vw-420px)] w-full md:h-[calc(100vh-65px)]"
+  >
     <div class="w-full z-50 fixed text-center">
       <div
         class="w-full h-[70px] flex justify-between items-center bg-black px-4 mb-[70px]"
@@ -106,34 +104,52 @@ const { commonChat } = toRefs(props);
     </div>
 
     <div
-      class="w-full h-[100vh] flex justify-end items-start px-10 py-20 cursor-pointer bg-gray-300"
+      v-if="chat.length"
+      class="w-full flex min-h-[calc(100vh-50px)] h-[calc(100vh-50px)] justify-end items-start cursor-pointer"
     >
-      <div class="w-full flex flex-col justify-between items-end">
+      <div
+        class="w-full bg-gray-300 flex flex-col justify-between items-end py-20"
+      >
         <div
           class="w-full p-4"
-          v-for="(chat, chatIndex) in commonChat"
+          v-for="(chat, chatIndex) in sortedMessages"
           :key="chatIndex"
         >
           <div
             :class="
               chat.senderId === thisUser.localId
-                ? 'w-full flex justify-end items-center'
-                : 'w-full flex justify-start items-center'
+                ? 'w-[90%]  flex flex-col justify-center items-end'
+                : 'w-[90%] flex flex-col justify-center items-start'
             "
           >
-            <div v-if="chat.senderId !== thisUser.localId">
-              <img :src="chat.img" alt="" class="w-12 h-12 rounded-full mr-8" />
-            </div>
-            <!-- <div class="text-black">{{ chat.sender }}</div> -->
-
-            <div
-              :class="
-                chat.senderId === thisUser.localId
-                  ? ' bg-green-600 py-1 px-2 rounded-xl text-gray-200'
-                  : 'bg-gray-400 py-1 px-2 rounded-xl text-white'
-              "
-            >
-              {{ chat.text }}
+            <div class="flex justify-center items-center">
+              <div v-if="chat.senderId !== thisUser.localId">
+                <img
+                  :src="chat.img"
+                  alt=""
+                  class="w-12 h-12 rounded-full mr-2"
+                />
+              </div>
+              <div
+                :class="
+                  chat.senderId === thisUser.localId
+                    ? ' bg-green-500 max-h-[40px] flex flex-col justify-center items-center px-2 rounded-xl text-gray-200 break-all'
+                    : 'bg-gray-500  max-h-[40px] flex flex-col justify-center items-center  py-[0px]  px-2 rounded-xl text-white break-all'
+                "
+              >
+                <div class="text-[14px]">
+                  {{ chat.text }}
+                </div>
+                <div
+                  class="flex justify-end items-center text-gray-200 text-[11px] mx-1"
+                >
+                  {{
+                    moment(chat.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
+                      "h:mm"
+                    )
+                  }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -142,6 +158,14 @@ const { commonChat } = toRefs(props);
           <CheckAllIcon fillColor="#FFFFFF" :size="25" />
           <div class="text-white">Message ...</div>
         </div> -->
+      </div>
+    </div>
+
+    <div v-else class="w-full min-h-[100vh] h-full bg-gray-300">
+      <div class="w-full h-full flex justify-center items-center">
+        <div class="text-2xl text-gray-900">
+          Here is no messages in the chat ...
+        </div>
       </div>
     </div>
     <div id="SendSection" class="fixed bottom-0 bg-black h-[60px] w-full">

@@ -15,6 +15,7 @@ import { useAuthStore } from "../store/auth-store";
 import { useMessageViewStore } from "../store/messageView-store";
 
 const messageViewStore = useMessageViewStore();
+const { messageViewOpen } = storeToRefs(messageViewStore);
 const authStore = useAuthStore();
 const {
   userDataForChat,
@@ -32,6 +33,14 @@ watchEffect(() => {
   console.log(currentChat);
 });
 
+const scrollToLastMessage = () => {
+  const objDiv = document.getElementById("MessageSection");
+  objDiv.scrollTo({
+    top: objDiv.scrollHeight, // Scroll to the bottom
+    behavior: "smooth", // Add smooth scrolling
+  });
+};
+
 const sendMessage = async () => {
   if (!message.value.trim()) return; // Prevent sending empty messages
 
@@ -46,18 +55,26 @@ const sendMessage = async () => {
   });
 
   message.value = ""; // Clear input after sending
-  const objDiv = document.getElementById("MessageSection");
-  objDiv.scrollTo({
-    top: objDiv.scrollHeight, // Scroll to the bottom
-    behavior: "smooth", // Add smooth scrolling
-  });
+  scrollToLastMessage();
 };
+onMounted(() => {
+  scrollToLastMessage();
+});
 
-// Scroll to the last message on initial load
+watchEffect(
+  () => {
+    if (currentChat) {
+      setTimeout(() => {
+        scrollToLastMessage();
+      }, 100);
+    }
+  },
+  { deep: true }
+);
 </script>
 <template>
   <div
-    class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full z-50 h-[100vh] fixed text-center bg-gray-300"
+    class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full z-50 h-[100%] fixed text-center bg-gray-300"
   >
     <div class="w-full flex justify-between items-center bg-black px-4">
       <div class="w-full h-full flex items-center gap-4 px-4 py-2">
@@ -65,7 +82,7 @@ const sendMessage = async () => {
           <ArrowLeftIcon
             fillColor="#ffffff"
             :size="24"
-            @click="messageViewStore.messageViewOpen = false"
+            @click="messageViewOpen = false"
           />
         </div>
         <img
@@ -87,7 +104,7 @@ const sendMessage = async () => {
 
     <div
       id="MessageSection"
-      class="pt-20 pb-8 z-[-1] overflow-auto touch-auto fixed md:w-[calc(100vw-420px)] w-full md:h-[calc(100vh-65px)] h-[calc(100vh-85px)]"
+      class="pt-20 z-[-1] overflow-auto touch-auto fixed md:w-[calc(100vw-420px)] w-full md:h-[calc(100vh-65px)] min-h-[calc(100vh-150px)] h-[calc(100vh-150px)]"
     >
       <div v-if="chats && chats.length > 0">
         <!-- Loop through all chats -->
@@ -107,16 +124,18 @@ const sendMessage = async () => {
               >
                 <div
                   v-if="msg.message"
-                  class="inline-block bg-white p-2 rounded-md my-2 break-all"
+                  class="bg-white py-1 px-2 rounded-md my-2 break-all"
                 >
-                  {{ msg.message }}
-                </div>
-                <div v-if="msg.createdAt">
-                  {{
-                    moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
-                      "h:mm"
-                    )
-                  }}
+                  <div class="text-[14px]">
+                    {{ msg.message }}
+                  </div>
+                  <div v-if="msg.createdAt" class="text-[11px]">
+                    {{
+                      moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
+                        "h:mm"
+                      )
+                    }}
+                  </div>
                 </div>
               </div>
 
@@ -125,16 +144,18 @@ const sendMessage = async () => {
                 class="w-[calc(80%-100px)] flex justify-end items-center space-x-1 float-right mt-8"
               >
                 <div
-                  class="inline-block bg-green-400 p-2 rounded-md my-2 break-all"
+                  class="bg-green-500 my-2 block text-gray-200 py-1 px-2 rounded-md break-all"
                 >
-                  {{ msg.message }}
-                </div>
-                <div>
-                  {{
-                    moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
-                      "h:mm"
-                    )
-                  }}
+                  <div class="inline-">
+                    {{ msg.message }}
+                  </div>
+                  <div class="text-[11px]">
+                    {{
+                      moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
+                        "h:mm"
+                      )
+                    }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -147,7 +168,6 @@ const sendMessage = async () => {
       <div v-else>
         <p>No chats available</p>
       </div>
-      <div class="py-20"></div>
     </div>
 
     <div id="SendSection" class="fixed bottom-0 bg-black h-[60px] w-full">

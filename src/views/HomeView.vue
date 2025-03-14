@@ -15,11 +15,11 @@ import CommonMessageView from "../components/CommonMessageView.vue";
 import DefaultView from "../components/DefaultView.vue";
 import { useCommonChatStore } from "../store/common-chat-store";
 const commonChatStore = useCommonChatStore();
-
 const messageViewStore = useMessageViewStore();
+const { messageViewOpen } = storeToRefs(messageViewStore);
 
 const authStore = useAuthStore();
-const { userDataForChat, user, showFindFriends, commonChat } =
+const { userDataForChat, user, showFindFriends, commonChat, currentChat } =
   storeToRefs(authStore);
 
 onMounted(async () => {
@@ -94,8 +94,9 @@ const combinedFunc = async () => {
         />
       </div>
     </div>
-    <div class="bg-gray-900"><CommonChat /></div>
+
     <div v-if="!showFindFriends" class="overflow-auto h-[100vh]">
+      <div><CommonChat /></div>
       <FindFriendsView />
     </div>
 
@@ -105,14 +106,14 @@ const combinedFunc = async () => {
   </div>
   <div>
     <div
-      class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full h-[100vh] text-center bg-gray-100"
+      class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full h-full text-center"
       v-if="commonChatStore.onCommonChat"
     >
-      <CommonMessageView :commonChat="commonChat" />
+      <CommonMessageView :chat="commonChat" />
     </div>
     <div v-else>
-      <div v-if="userDataForChat.length && messageViewStore.messageViewOpen">
-        <MessageView />
+      <div v-if="userDataForChat.length && messageViewOpen">
+        <MessageView :chat="currentChat" />
       </div>
       <div
         v-else

@@ -3,7 +3,7 @@ import { onMounted, ref, watchEffect } from "vue";
 import { useRouter } from "vue-router";
 import { nextTick } from "vue";
 import moment from "moment";
-
+import { storeToRefs } from "pinia";
 import { auth, db } from "../firebase-init";
 import { v4 as uuid } from "uuid";
 import { signInWithPopup, signOut, GoogleAuthProvider } from "firebase/auth";
@@ -20,7 +20,10 @@ import {
   arrayUnion,
   onSnapshot,
   query,
+  Timestamp,
 } from "firebase/firestore";
+
+import { useMessageViewStore } from "../store/messageView-store";
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({
@@ -47,7 +50,8 @@ export const useAuthStore = defineStore(
     const currentChat = ref([]);
     const currentChatId = ref(null);
     const commonChat = ref([]);
-
+    const messageViewStore = useMessageViewStore();
+    const { messageViewOpen } = storeToRefs(messageViewStore);
     const router = useRouter();
 
     const setUser = (userInfo) => {
@@ -175,7 +179,6 @@ export const useAuthStore = defineStore(
         await addDoc(collection(db, "chat"), {
           text: message.value,
           userId: userId, // Sender's ID
-          createdAt: serverTimestamp(),
         });
 
         message.value = ""; // Clear input after sending
@@ -231,23 +234,51 @@ export const useAuthStore = defineStore(
         });
 
         chats.value = chatArray; // Update `chats` ref
-        console.log(chats.value); // Now logs an array
+
+        // ✅ Check if the number of chats is more than 5
+        messageViewOpen.value = chatArray.length > 0;
+
+        console.log(`Chats count: ${chatArray.length}`, chats.value);
       });
     };
 
     const getCommonChatsByUser = () => {
+      // Query to fetch all the messages without ordering by 'createdAt' in Firestore
       const q = query(collection(db, "chat"));
 
-      onSnapshot(q, (querySnapshot) => {
-        const chatArray = []; // Temporary array to hold chats
+      onSnapshot(
+        q,
+        (querySnapshot) => {
+          const chatArray = []; // Temporary array to hold chat data
 
-        querySnapshot.forEach((doc) => {
-          chatArray.push(doc.data());
-        });
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
 
-        commonChat.value = chatArray; // Update `chats` ref
-        console.log(commonChat.value); // Now logs an array
-      });
+            // Handle 'createdAt' and ensure it is a Date object
+            const createdAt =
+              data.createdAt instanceof Date
+                ? data.createdAt // If it's already a Date, keep it
+                : data.createdAt && data.createdAt.toDate
+                ? data.createdAt.toDate()
+                : new Date(); // Convert Timestamp or use current date
+
+            chatArray.push({
+              id: doc.id, // Include document ID
+              ...data, // Spread the data from Firestore
+              createdAt: createdAt, // Use the processed 'createdAt'
+            });
+          });
+
+          // Sort the messages by 'createdAt' manually
+          chatArray.sort((a, b) => a.createdAt - b.createdAt);
+
+          commonChat.value = chatArray; // Update reactive reference with sorted chat
+          console.log(commonChat.value); // Logs the updated sorted array
+        },
+        (error) => {
+          console.error("Error fetching chats:", error); // Error handling
+        }
+      );
     };
     const logout = async () => {
       try {
