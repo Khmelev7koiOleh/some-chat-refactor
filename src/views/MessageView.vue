@@ -10,7 +10,7 @@ import EmoticonExcitedOutlineIcon from "vue-material-design-icons/EmoticonExcite
 import ArrowLeftIcon from "vue-material-design-icons/ArrowLeft.vue";
 import PlusIcon from "vue-material-design-icons/Plus.vue";
 import SendIcon from "vue-material-design-icons/Send.vue";
-
+import { useScrollTo } from "../composables/scrollTo";
 import { useAuthStore } from "../store/auth-store";
 import { useMessageViewStore } from "../store/messageView-store";
 
@@ -26,20 +26,15 @@ const {
 
   chats,
 } = storeToRefs(authStore);
+const chatContainerId = "MessageSection";
+
+const { scrollToLastMessage } = useScrollTo();
 
 let message = ref("");
 
 watchEffect(() => {
   console.log(currentChat);
 });
-
-const scrollToLastMessage = () => {
-  const objDiv = document.getElementById("MessageSection");
-  objDiv.scrollTo({
-    top: objDiv.scrollHeight, // Scroll to the bottom
-    behavior: "smooth", // Add smooth scrolling
-  });
-};
 
 const sendMessage = async () => {
   if (!message.value.trim()) return; // Prevent sending empty messages
@@ -55,22 +50,17 @@ const sendMessage = async () => {
   });
 
   message.value = ""; // Clear input after sending
-  scrollToLastMessage();
 };
-onMounted(() => {
-  scrollToLastMessage();
-});
 
-watchEffect(
-  () => {
-    if (currentChat.length) {
-      setTimeout(() => {
-        scrollToLastMessage();
-      }, 100);
-    }
-  },
-  { deep: true }
-);
+scrollToLastMessage(chatContainerId);
+watch(currentChat, () => {
+  scrollToLastMessage(chatContainerId);
+});
+onMounted(() => {
+  setTimeout(() => {
+    scrollToLastMessage(chatContainerId);
+  }, 100);
+});
 </script>
 <template>
   <div

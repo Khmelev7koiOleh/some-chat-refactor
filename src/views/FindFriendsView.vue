@@ -10,11 +10,13 @@ import { useAuthStore } from "../store/auth-store";
 import { onMounted } from "vue";
 import { useMessageViewStore } from "../store/messageView-store";
 import { useCommonChatStore } from "../store/common-chat-store";
-
+import { useScrollTo } from "../composables/scrollTo";
 const commonChatStore = useCommonChatStore();
 const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
+const chatContainerId = "MessageSection";
 
+const { scrollToLastMessage } = useScrollTo();
 const authStore = useAuthStore();
 const { userDataForChat, localId, user: thisUser } = storeToRefs(authStore);
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toRefs, ref, computed } from "vue";
+import { toRefs, ref, computed, watch, onMounted } from "vue";
 
 import moment from "moment";
 import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
@@ -30,12 +30,26 @@ import {
 import { useCommonChatStore } from "../store/common-chat-store";
 import { useMessageViewStore } from "../store/messageView-store";
 import { useAuthStore } from "../store/auth-store";
+import { useScrollTo } from "../composables/scrollTo";
+
+const props = defineProps({
+  chat: { type: Object },
+});
+const { chat } = toRefs(props);
+
+// onMounted(() => {
+//   scrollToLastMessage();
+// });
+
 const authStore = useAuthStore();
 const { userDataForChat, localId, user: thisUser } = storeToRefs(authStore);
 const messageViewStore = useMessageViewStore();
 const commonChatStore = useCommonChatStore();
+const chatContainerId = "MessageSection";
 
+const { scrollToLastMessage } = useScrollTo();
 let message = ref("");
+const getChatsSize = document.getElementById("MessageSection");
 const sendToCommonChat = async () => {
   if (!message.value.trim()) return;
 
@@ -47,6 +61,7 @@ const sendToCommonChat = async () => {
       senderId: thisUser.value.localId,
       img: thisUser.value.photoUrl,
     });
+    scrollToLastMessage(getChatsSize);
 
     message.value = ""; // Clear input after sending
   } catch (error) {
@@ -61,10 +76,14 @@ const sortedMessages = computed(() => {
     return timeA.getTime() - timeB.getTime(); // Ascending order: earliest first
   });
 });
-const props = defineProps({
-  chat: { type: Object },
+watch(chat, () => {
+  scrollToLastMessage(chatContainerId);
 });
-const { chat } = toRefs(props);
+onMounted(() => {
+  setTimeout(() => {
+    scrollToLastMessage(chatContainerId);
+  }, 100);
+});
 </script>
 
 <template>
@@ -104,11 +123,12 @@ const { chat } = toRefs(props);
     </div>
 
     <div
+      id="MessageSection"
       v-if="chat.length"
-      class="w-full flex min-h-[100vh)] h-[100vh] justify-end items-start cursor-pointer"
+      class="w-full flex min-h-[100vh)] overflow-auto touch-auto h-[100vh] justify-end items-start cursor-pointer"
     >
       <div
-        class="w-full bg-gray-300 flex flex-col justify-between items-end pb-[180px] md:pb-[150px]"
+        class="w-full bg-gray-300 flex flex-col justify-between items-end pb-[150px] md:pb-[150px]"
       >
         <div
           class="w-full p-4"

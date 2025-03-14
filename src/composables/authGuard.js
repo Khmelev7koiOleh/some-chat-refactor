@@ -9,6 +9,8 @@ const authGuard = (to, from, next) => {
   // If there is no user logged in, redirect to the login page
   if (!user) {
     return router.push("/login"); // Redirect to the login page
+  } else {
+    router.push("/login");
   }
 
   // Otherwise, allow the user to access the route
