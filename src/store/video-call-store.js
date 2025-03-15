@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 export const useVideoCallOpen = defineStore("videoCall", {
   state: () => ({
     videoCallOpen: false,
+    videoPeerId: "",
   }),
 
   actions: {

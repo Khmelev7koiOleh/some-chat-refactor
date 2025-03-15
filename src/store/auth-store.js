@@ -370,7 +370,9 @@ export const useAuthStore = defineStore(
         console.error("Logout failed:", error);
       }
     };
-
+    onMounted(() => {
+      generatePeerId();
+    });
     return {
       user,
       login,

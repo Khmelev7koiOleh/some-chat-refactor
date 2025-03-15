@@ -76,22 +76,24 @@ const sendMessage = async () => {
   message.value = ""; // Clear input after sending
 };
 
-// const callToUser = (id) => {
-//   // Find the user in the list whose id matches currentChat.participants[0].id
-//   const targetUser = peerUsers.value.find(
-//     (user) => id === currentChat.value.participants[0]
-//   );
+const callToUser = (id) => {
+  console.log(id);
+  console.log(currentChat.value.participants[1]);
+  // Find the user in the list whose id matches currentChat.participants[0].id
+  const targetUser = peerUsers.value.find(
+    (user) => id === currentChat.value.participants[0]
+  );
 
-//   // If targetUser is found, initiate the call
-//   if (targetUser) {
-//     authStore.callUser(targetUser.peerId); // Assuming callUser is in your store and accepts peerId
+  // If targetUser is found, initiate the call
+  if (targetUser) {
+    authStore.callUser(targetUser.peerId); // Assuming callUser is in your store and accepts peerId
 
-//     peerRef.value = targetUser.peerId;
-//     console.log(peerRef.value);
-//   } else {
-//     console.error("No matching user found to call");
-//   }
-// };
+    peerRef.value = targetUser.peerId;
+    console.log(peerRef.value);
+  } else {
+    console.error("No matching user found to call");
+  }
+};
 scrollToLastMessage(chatContainerId);
 watch(currentChat, () => {
   scrollToLastMessage(chatContainerId);
@@ -179,25 +181,6 @@ onMounted(() => {
         <div class="flex items-center justify-center">
           <VideoCall :callTo="peerRef" />
         </div>
-      </div>
-      <div>
-        <!-- <button @click="callToUser(userDataForChat[0].id)">0000</button> -->
-        <!-- <h2>Available Users</h2>
-        <ul>
-          <li v-for="user in peerUsers" :key="user.id">
-            <button
-              class="text-white bg-black py-1 px-2"
-              @click="authStore.callUser(user.peerId)"
-            >
-              Call {{ user.id }}
-            </button>
-          </li>
-        </ul> -->
-        <!-- <div class="text-white">
-          {{ peerUsers }}
-        </div> -->
-
-        <video id="remoteVideo" autoplay></video>
       </div>
     </div>
     <div

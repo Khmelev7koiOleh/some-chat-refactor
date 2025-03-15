@@ -75,7 +75,7 @@ onMounted(() => {
 const callToUser = (id) => {
   // Find the user in the list whose id matches currentChat.participants[0].id
   const targetUser = peerUsers.value.find(
-    (user) => id === currentChat.value.participants[0]
+    (user) => id === currentChat.value.participants[1]
   );
 
   // If targetUser is found, initiate the call
@@ -89,9 +89,9 @@ const callToUser = (id) => {
   }
 };
 const startCall = () => {
-  console.log(callTo);
   const friendId = peerRef.value;
-  console.log(callTo);
+  //   const friendId = prompt("Enter your friend's Peer ID:");
+  console.log(peerRef.value);
   navigator.mediaDevices
     .getUserMedia({ video: true, audio: true })
     .then((stream) => {
@@ -111,7 +111,6 @@ const endCall = () => {
   call.value?.close();
   localVideo.value.srcObject = null;
   remoteVideo.value.srcObject = null;
-  videoCallOpen.value = false;
 };
 
 const combinedFunc = (id) => {
