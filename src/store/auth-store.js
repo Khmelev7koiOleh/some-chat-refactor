@@ -325,6 +325,7 @@ export const useAuthStore = defineStore(
       });
     };
     const callUser = (targetPeerId) => {
+      console.log(targetPeerId);
       const peer = new Peer(); // Create a new PeerJS instance
 
       peer.on("open", (id) => {

@@ -1,10 +1,10 @@
 <template>
-  <div class="video-call bg-gray-900 p-4">
+  <div class="video-call bg-gray-950 p-4">
     <video ref="localVideo" autoplay playsinline></video>
     <video ref="remoteVideo" autoplay playsinline></video>
     <div class="flex flex-col gap-2">
       <button
-        @click="startCall"
+        @click="combinedFunc(userDataForChat[0].id)"
         class="bg-black py-1 px-2 rounded-md text-white"
       >
         Start Call
@@ -18,15 +18,35 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { toRefs, ref, computed, watch, onMounted, onBeforeMount } from "vue";
+import { storeToRefs } from "pinia";
 import Peer from "peerjs";
+import { useAuthStore } from "../store/auth-store";
+import { useVideoCallOpen } from "../store/video-call-store";
 
+const videoCall = useVideoCallOpen();
+const { videoCallOpen } = storeToRefs(videoCall);
+const authStore = useAuthStore();
+const {
+  userDataForChat,
+  user,
+  currentChatId,
+  currentChat,
+  showFindFriends,
+  peerUsers,
+  chats,
+} = storeToRefs(authStore);
+
+const props = defineProps({
+  callTo: { type: String },
+});
+const { callTo } = toRefs(props);
 const localVideo = ref(null);
 const remoteVideo = ref(null);
 const peer = ref(null);
 const call = ref(null);
 const peerId = ref(null);
-
+const peerRef = ref("");
 onMounted(() => {
   peer.value = new Peer(); // Create PeerJS instance
 
@@ -52,8 +72,26 @@ onMounted(() => {
   });
 });
 
+const callToUser = (id) => {
+  // Find the user in the list whose id matches currentChat.participants[0].id
+  const targetUser = peerUsers.value.find(
+    (user) => id === currentChat.value.participants[0]
+  );
+
+  // If targetUser is found, initiate the call
+  if (targetUser) {
+    // authStore.callUser(targetUser.peerId); // Assuming callUser is in your store and accepts peerId
+
+    peerRef.value = targetUser.peerId;
+    console.log(peerRef.value);
+  } else {
+    console.error("No matching user found to call");
+  }
+};
 const startCall = () => {
-  const friendId = prompt("Enter your friend's Peer ID:");
+  console.log(callTo);
+  const friendId = peerRef.value;
+  console.log(callTo);
   navigator.mediaDevices
     .getUserMedia({ video: true, audio: true })
     .then((stream) => {
@@ -73,6 +111,12 @@ const endCall = () => {
   call.value?.close();
   localVideo.value.srcObject = null;
   remoteVideo.value.srcObject = null;
+  videoCallOpen.value = false;
+};
+
+const combinedFunc = (id) => {
+  callToUser(id);
+  startCall();
 };
 </script>
 

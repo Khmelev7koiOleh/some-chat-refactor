@@ -22,6 +22,7 @@ import SendIcon from "vue-material-design-icons/Send.vue";
 import { useScrollTo } from "../composables/scrollTo";
 import { useAuthStore } from "../store/auth-store";
 import { useMessageViewStore } from "../store/messageView-store";
+import { useVideoCallOpen } from "../store/video-call-store";
 import ScrollToBottomButton from "../components/ScrollToBottomButton.vue";
 import { useChangeBackground } from "../composables/changeBackground";
 import EmojiPicker from "vue3-emoji-picker";
@@ -29,6 +30,9 @@ import "vue3-emoji-picker/css";
 const { changeBackground, random } = useChangeBackground();
 const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
+
+const videoCall = useVideoCallOpen();
+const { videoCallOpen } = storeToRefs(videoCall);
 const authStore = useAuthStore();
 const {
   userDataForChat,
@@ -45,7 +49,9 @@ const { scrollToLastMessage } = useScrollTo();
 
 let message = ref("");
 let changeThemeOpen = ref(false);
-let videoCallOpen = ref(false);
+
+const peerRef = ref("");
+
 watchEffect(() => {
   console.log(currentChat);
 });
@@ -70,6 +76,22 @@ const sendMessage = async () => {
   message.value = ""; // Clear input after sending
 };
 
+// const callToUser = (id) => {
+//   // Find the user in the list whose id matches currentChat.participants[0].id
+//   const targetUser = peerUsers.value.find(
+//     (user) => id === currentChat.value.participants[0]
+//   );
+
+//   // If targetUser is found, initiate the call
+//   if (targetUser) {
+//     authStore.callUser(targetUser.peerId); // Assuming callUser is in your store and accepts peerId
+
+//     peerRef.value = targetUser.peerId;
+//     console.log(peerRef.value);
+//   } else {
+//     console.error("No matching user found to call");
+//   }
+// };
 scrollToLastMessage(chatContainerId);
 watch(currentChat, () => {
   scrollToLastMessage(chatContainerId);
@@ -105,11 +127,13 @@ onMounted(() => {
             @click="messageViewOpen = false"
           />
         </div>
+        <div class="text-white">{{ peerRef }}</div>
         <img
           :src="userDataForChat[0].picture"
           class="w-12 h-12 rounded-full"
           alt=""
         />
+
         <div class="text-white">{{ userDataForChat[0].name }}</div>
       </div>
       <div @click="videoCallOpen = !videoCallOpen">
@@ -121,7 +145,7 @@ onMounted(() => {
       </div>
       <div class="flex justify-center items-center">
         <div class="">
-          <div class="flex items-center justify-end">
+          <div class="flex items-center justify-end ml-6">
             <DotsVerticalIcon
               @click="changeThemeOpen = !changeThemeOpen"
               fillColor="#ffffff"
@@ -148,21 +172,30 @@ onMounted(() => {
     </div>
 
     <div v-if="videoCallOpen">
-      <div class="absolute w-1/3 h-1/2 top-[20%] left-[33%] center z-[-0]">
+      <!-- <div @click="callUserToParticipant(currentChat.participants[0].peerId)">
+        0
+      </div> -->
+      <div class="w-[300px] h-[300px] fixed top-[30%] left-[5vw] z-[-0]">
         <div class="flex items-center justify-center">
-          <VideoCall />
+          <VideoCall :callTo="peerRef" />
         </div>
       </div>
       <div>
-        <h2>Available Users</h2>
-        <div class="text-white">
-          {{ peerUsers }}
-        </div>
+        <!-- <button @click="callToUser(userDataForChat[0].id)">0000</button> -->
+        <!-- <h2>Available Users</h2>
         <ul>
           <li v-for="user in peerUsers" :key="user.id">
-            <button @click="callUser(user.peerId)">Call {{ user.id }}</button>
+            <button
+              class="text-white bg-black py-1 px-2"
+              @click="authStore.callUser(user.peerId)"
+            >
+              Call {{ user.id }}
+            </button>
           </li>
-        </ul>
+        </ul> -->
+        <!-- <div class="text-white">
+          {{ peerUsers }}
+        </div> -->
 
         <video id="remoteVideo" autoplay></video>
       </div>

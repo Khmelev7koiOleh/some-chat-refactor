@@ -45,7 +45,7 @@ const openChat = async () => {
 </script>
 <template>
   <div
-    class="w-full flex items-center px-4 py-3 cursor-pointer bg-gray-900 hover:bg-gray-800"
+    class="w-full flex items-center px-4 py-3 cursor-pointer"
     @click="openChat(user)"
   >
     <div>
