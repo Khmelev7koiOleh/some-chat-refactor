@@ -175,7 +175,7 @@ onMounted(() => {
       <!-- <div @click="callUserToParticipant(currentChat.participants[0].peerId)">
         0
       </div> -->
-      <div class="w-[300px] h-[300px] fixed top-[30%] left-[5vw] z-[-0]">
+      <div class="w-[300px] h-[300px] fixed top-[20%] left-[5vw] z-[-0]">
         <div class="flex items-center justify-center">
           <VideoCall :callTo="peerRef" />
         </div>
