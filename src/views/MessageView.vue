@@ -182,6 +182,27 @@ onMounted(() => {
           <VideoCall :callTo="peerRef" />
         </div>
       </div>
+      <div>
+        {{}}
+        <button @click="callToUser(userDataForChat[0].id)">0000</button>
+        <h2>Available Users</h2>
+        <ul>
+          <li v-for="user in peerUsers" :key="user.id">
+            <button
+              class="text-white bg-black py-1 px-2"
+              @click="authStore.callUser(user.peerId)"
+            >
+              Call {{ user.id }}
+            </button>
+          </li>
+        </ul>
+
+        <div class="text-white">
+          {{ peerUsers }}
+        </div>
+
+        <video id="remoteVideo" autoplay></video>
+      </div>
     </div>
     <div
       id="MessageSection"
