@@ -75,7 +75,7 @@ onMounted(() => {
 const callToUser = (id) => {
   // Find the user in the list whose id matches currentChat.participants[0].id
   const targetUser = peerUsers.value.find(
-    (user) => id === currentChat.value.participants[1]
+    (user) => id === currentChat.value.participants[0]
   );
 
   // If targetUser is found, initiate the call
