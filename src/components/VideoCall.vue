@@ -89,8 +89,8 @@ const callToUser = (id) => {
   }
 };
 const startCall = () => {
-  const friendId = peerRef.value;
-  //   const friendId = prompt("Enter your friend's Peer ID:");
+  //   const friendId = peerRef.value;
+  const friendId = prompt("Enter your friend's Peer ID:");
   console.log(peerRef.value);
   navigator.mediaDevices
     .getUserMedia({ video: true, audio: true })
