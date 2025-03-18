@@ -12,18 +12,18 @@ import {
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
-//PROPS
+// PROPS
 const props = defineProps({
   callTo: { type: String },
 });
 const { callTo } = toRefs(props);
+
 // Firebase setup
 const db = getFirestore();
 const auth = getAuth();
 const userId = auth.currentUser?.uid || "unknown_user"; // Get logged-in user ID
-onMounted(() => {
-  console.log(callTo.value);
-});
+
+// Refs
 const localVideo = ref(null);
 const remoteVideo = ref(null);
 const peer = ref(null);
@@ -34,7 +34,8 @@ const incomingCallerId = ref(null);
 const incomingPeerId = ref(null);
 
 onMounted(() => {
-  console.log(userId);
+  console.log("Logged in user ID:", userId);
+
   // Initialize PeerJS
   peer.value = new Peer();
 
@@ -43,14 +44,18 @@ onMounted(() => {
     peerId.value = id;
   });
 
+  // Handle incoming calls
   peer.value.on("call", (incomingCallObj) => {
-    console.log("Incoming call...");
+    console.log("Incoming call from peer:", incomingCallObj.peer);
     incomingCall.value = true;
-    incomingCallerId.value = "Unknown User"; // You can improve this by fetching sender's name from Firestore or other service
-    incomingPeerId.value = incomingCallObj.peer; // Store peer ID for answering
+    incomingCallerId.value = "Unknown User"; // Can be replaced with fetched data
+    incomingPeerId.value = incomingCallObj.peer;
+
+    // Store call object
+    call.value = incomingCallObj;
   });
 
-  // Listen for call requests in Firestore
+  // Listen for Firestore call requests (only needed for initiating a call)
   const q = query(
     collection(db, "messages"),
     where("receiver", "==", userId),
@@ -60,6 +65,7 @@ onMounted(() => {
   onSnapshot(q, (snapshot) => {
     snapshot.forEach((doc) => {
       const data = doc.data();
+      console.log("Received Firestore call request from:", data.sender);
       incomingCall.value = true;
       incomingCallerId.value = data.sender;
       incomingPeerId.value = data.peerId;
@@ -67,14 +73,14 @@ onMounted(() => {
   });
 });
 
-// Send call request
+// Start Call (Caller)
 const startCall = async () => {
-  const receiverId = prompt("Enter recipient's user ID"); // Replace with your chat logic
-
   if (!peer.value || !peerId.value) {
     console.error("Peer not initialized");
     return;
   }
+
+  console.log("Sending call request to:", callTo.value);
 
   // Send a Firestore message with the call request
   await addDoc(collection(db, "messages"), {
@@ -88,7 +94,7 @@ const startCall = async () => {
   console.log("Call request sent!");
 };
 
-// Accept call
+// Accept Call (Receiver)
 const acceptCall = () => {
   if (!incomingPeerId.value) return;
 
@@ -96,14 +102,18 @@ const acceptCall = () => {
     .getUserMedia({ video: true, audio: true })
     .then((stream) => {
       localVideo.value.srcObject = stream;
-      const answeredCall = peer.value.call(incomingPeerId.value, stream);
 
-      answeredCall.on("stream", (remoteStream) => {
+      // Answer the incoming call with our media stream
+      call.value.answer(stream);
+
+      // Listen for the remote stream
+      call.value.on("stream", (remoteStream) => {
+        console.log("Received remote stream from caller");
         remoteVideo.value.srcObject = remoteStream;
       });
 
-      call.value = answeredCall;
-      incomingCall.value = false; // Hide call UI after answering
+      // Hide call UI after answering
+      incomingCall.value = false;
     })
     .catch((err) => {
       console.error("Error accessing media devices", err);
@@ -129,6 +139,7 @@ const endCall = () => {
   <div class="flex flex-col items-center justify-center">
     <div class="text-white z-[50] bg-black">My peerId: {{ peerId }}</div>
     <div class="text-white z-[50] bg-black">callTo: {{ userId }}</div>
+
     <div class="video-call bg-gray-950 p-4 z-[50]">
       <video ref="localVideo" autoplay playsinline></video>
       <video ref="remoteVideo" autoplay playsinline></video>
@@ -167,6 +178,7 @@ const endCall = () => {
     </div>
   </div>
 </template>
+
 <style scoped>
 .video-call {
   display: flex;

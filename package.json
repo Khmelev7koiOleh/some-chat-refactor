@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.5",
+    "agora-rtc-sdk": "^3.6.11",
     "firebase": "^11.3.0",
     "moment": "^2.30.1",
     "peerjs": "^1.5.4",
