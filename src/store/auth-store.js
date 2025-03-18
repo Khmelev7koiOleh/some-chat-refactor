@@ -76,35 +76,44 @@ export const useAuthStore = defineStore(
 
         console.log("User logged in:", result.user);
 
-        // Firestore user check
         const userRef = doc(db, "users", result.user.uid);
         const userSnap = await getDoc(userRef);
 
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            uid: result.user.uid,
-            displayName: result.user.displayName,
-            email: result.user.email,
-            photoURL: result.user.photoURL,
-            providerId: result.user.providerData[0].providerId,
-            createdAt: new Date(),
-          });
+        const userData = {
+          uid: result.user.uid,
+          displayName: result.user.displayName,
+          email: result.user.email,
+          photoURL: result.user.photoURL,
+          providerId: result.user.providerData[0].providerId,
+          createdAt: new Date(),
+        };
 
+        if (!userSnap.exists()) {
+          await setDoc(userRef, userData);
           console.log("New user added to Firestore.");
         } else {
           console.log("User already exists in Firestore:", userSnap.data());
         }
 
         setUser(result.user);
-        generatePeerId(result.user.uid);
+
+        // Generate and store Peer ID in the same document
+        const peer = new Peer();
+        peer.on("open", async (id) => {
+          console.log("Generated Peer ID:", id);
+
+          // Update the existing user document with peerId
+          await setDoc(userRef, { ...userData, peerId: id }, { merge: true });
+
+          console.log("Peer ID added to user document.");
+        });
+
         router.push("/");
       } catch (error) {
         console.error("Login failed:", error);
         router.push("/login");
       }
     };
-
-    // ✅ Logout function
 
     // ✅ Fetch all users from Firestore
     const getAllUsers = async () => {
@@ -282,38 +291,6 @@ export const useAuthStore = defineStore(
         }
       );
     };
-    const generatePeerId = async (userId) => {
-      const peer = new Peer(); // Create a PeerJS instance
-
-      peer.on("open", async (id) => {
-        console.log("Generated Peer ID:", id);
-
-        if (!userId) {
-          console.error("User ID is missing!");
-          return;
-        }
-
-        // Save the Peer ID to Firestore
-        await setDoc(doc(db, "peerIDs", userId), {
-          peerId: id,
-          createdAt: new Date(),
-        });
-      });
-
-      // ✅ Handle Incoming Calls
-      peer.on("call", (call) => {
-        navigator.mediaDevices
-          .getUserMedia({ video: true, audio: true })
-          .then((stream) => {
-            call.answer(stream); // Answer the call with user's stream
-
-            call.on("stream", (remoteStream) => {
-              document.getElementById("remoteVideo").srcObject = remoteStream;
-            });
-          })
-          .catch((error) => console.error("Error getting user media", error));
-      });
-    };
 
     const fetchPeerIDs = () => {
       onSnapshot(collection(db, "peerIDs"), (snapshot) => {
@@ -370,9 +347,7 @@ export const useAuthStore = defineStore(
         console.error("Logout failed:", error);
       }
     };
-    onMounted(() => {
-      generatePeerId();
-    });
+
     return {
       user,
       login,
@@ -382,7 +357,7 @@ export const useAuthStore = defineStore(
       allUsers,
       userDataForChat,
       showFindFriends,
-      generatePeerId,
+
       logoutPopUpOpen,
       sendMessage,
       currentChatId,

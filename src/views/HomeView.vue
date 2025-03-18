@@ -24,7 +24,6 @@ const { userDataForChat, user, showFindFriends, commonChat, currentChat } =
 
 onMounted(async () => {
   try {
-    authStore.generatePeerId();
     authStore.fetchPeerIDs();
     authStore.getAllUsers();
 
