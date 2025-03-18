@@ -293,39 +293,45 @@ export const useAuthStore = defineStore(
     };
 
     const fetchPeerIDs = () => {
-      onSnapshot(collection(db, "peerIDs"), (snapshot) => {
+      onSnapshot(collection(db, "users"), (snapshot) => {
         peerUsers.value = snapshot.docs.map((doc) => ({
-          id: doc.id,
+          id: doc.peerId,
           ...doc.data(),
         }));
         console.log("Available Users:", peerUsers.value);
       });
     };
     const callUser = (targetPeerId) => {
-      console.log(targetPeerId);
-      const peer = new Peer(); // Create a new PeerJS instance
+      const peer = new Peer();
+      if (!peer) {
+        console.error("Peer instance is not initialized.");
+        return;
+      }
 
-      peer.on("open", (id) => {
-        console.log("Your Peer ID:", id);
+      if (!targetPeerId) {
+        console.error("Invalid target Peer ID.");
+        return;
+      }
 
-        const mediaConstraints = { video: true, audio: true };
+      console.log("Calling Peer ID:", targetPeerId);
 
-        navigator.mediaDevices
-          .getUserMedia(mediaConstraints)
-          .then((stream) => {
-            console.log("Got user media stream", stream);
+      navigator.mediaDevices
+        .getUserMedia({ video: true, audio: true })
+        .then((stream) => {
+          console.log("Got user media stream", stream);
+          const call = peer.call(targetPeerId, stream); // ✅ Use global `peer`
 
-            const call = peer.call(targetPeerId, stream); // Call the target user
+          call.on("stream", (remoteStream) => {
+            document.getElementById("remoteVideo").srcObject = remoteStream;
+          });
 
-            call.on("stream", (remoteStream) => {
-              // Show the remote video
-              document.getElementById("remoteVideo").srcObject = remoteStream;
-            });
-          })
-          .catch((error) =>
-            console.error("Error accessing media devices", error)
-          );
-      });
+          call.on("error", (error) => {
+            console.error("Call error:", error);
+          });
+        })
+        .catch((error) =>
+          console.error("Error accessing media devices", error)
+        );
     };
 
     const logout = async () => {
