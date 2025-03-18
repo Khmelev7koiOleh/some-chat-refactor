@@ -1,6 +1,5 @@
 <template>
   <div class="video-call bg-gray-950 p-4">
-    <p class="text-white">Your Peer ID: {{ peerId }}</p>
     <video ref="localVideo" autoplay playsinline></video>
     <video ref="remoteVideo" autoplay playsinline></video>
 
@@ -15,90 +14,132 @@
         End Call
       </button>
     </div>
+
+    <!-- Incoming Call Notification -->
+    <div v-if="incomingCall" class="incoming-call">
+      <p>Incoming call from {{ incomingCallerId }}</p>
+      <button
+        @click="acceptCall"
+        class="bg-green-500 py-1 px-2 rounded-md text-white"
+      >
+        Accept
+      </button>
+      <button
+        @click="rejectCall"
+        class="bg-red-500 py-1 px-2 rounded-md text-white"
+      >
+        Reject
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import Peer from "peerjs";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+
+// Firebase setup
+const db = getFirestore();
+const auth = getAuth();
+const userId = auth.currentUser?.uid || "unknown_user"; // Get logged-in user ID
 
 const localVideo = ref(null);
 const remoteVideo = ref(null);
 const peer = ref(null);
 const call = ref(null);
 const peerId = ref(null);
+const incomingCall = ref(false);
+const incomingCallerId = ref(null);
+const incomingPeerId = ref(null);
 
 onMounted(() => {
-  peer.value = new Peer(); // Create PeerJS instance
+  // Initialize PeerJS
+  peer.value = new Peer();
 
   peer.value.on("open", (id) => {
     console.log("My Peer ID:", id);
     peerId.value = id;
   });
 
-  peer.value.on("call", (incomingCall) => {
+  peer.value.on("call", (incomingCallObj) => {
     console.log("Incoming call...");
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        localVideo.value.srcObject = stream;
-        incomingCall.answer(stream); // Answer the call with local stream
-
-        incomingCall.on("stream", (remoteStream) => {
-          remoteVideo.value.srcObject = remoteStream;
-        });
-
-        incomingCall.on("error", (error) =>
-          console.error("Call error:", error)
-        );
-
-        call.value = incomingCall;
-      })
-      .catch((error) => console.error("Error accessing media devices:", error));
+    incomingCall.value = true;
+    incomingCallerId.value = "Unknown User"; // You can improve this by fetching sender's name
+    incomingPeerId.value = incomingCallObj.peer; // Store peer ID for answering
   });
 
-  peer.value.on("error", (err) => {
-    console.error("Peer error:", err);
+  // Listen for call requests in Firestore
+  const q = query(
+    collection(db, "messages"),
+    where("receiver", "==", userId),
+    where("type", "==", "call-request")
+  );
+
+  onSnapshot(q, (snapshot) => {
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      incomingCall.value = true;
+      incomingCallerId.value = data.sender;
+      incomingPeerId.value = data.peerId;
+    });
   });
 });
 
-const startCall = () => {
-  const friendId = prompt("Enter your friend's Peer ID:");
+// Send call request
+const startCall = async () => {
+  const receiverId = prompt("Enter recipient's user ID"); // Replace with your chat logic
 
-  if (!friendId) {
-    alert("Peer ID is required to make a call!");
+  if (!peer.value || !peerId.value) {
+    console.error("Peer not initialized");
     return;
   }
 
+  // Send a Firestore message with the call request
+  await addDoc(collection(db, "messages"), {
+    sender: userId,
+    receiver: receiverId,
+    type: "call-request",
+    peerId: peerId.value,
+    timestamp: new Date(),
+  });
+
+  console.log("Call request sent!");
+};
+
+// Accept call
+const acceptCall = () => {
   navigator.mediaDevices
     .getUserMedia({ video: true, audio: true })
     .then((stream) => {
       localVideo.value.srcObject = stream;
+      const answeredCall = peer.value.call(incomingPeerId.value, stream);
 
-      console.log("Calling:", friendId);
-      const outgoingCall = peer.value.call(friendId, stream); // Initiate a call
-
-      if (!outgoingCall) {
-        console.error("Call could not be placed.");
-        return;
-      }
-
-      outgoingCall.on("stream", (remoteStream) => {
+      answeredCall.on("stream", (remoteStream) => {
         remoteVideo.value.srcObject = remoteStream;
       });
 
-      outgoingCall.on("error", (error) => console.error("Call error:", error));
-
-      call.value = outgoingCall;
-    })
-    .catch((error) => console.error("Error accessing media devices:", error));
+      call.value = answeredCall;
+      incomingCall.value = false; // Hide call UI after answering
+    });
 };
 
+// Reject call
+const rejectCall = () => {
+  incomingCall.value = false;
+};
+
+// End call
 const endCall = () => {
-  if (call.value) {
-    call.value.close();
-    console.log("Call ended");
-  }
+  call.value?.close();
   localVideo.value.srcObject = null;
   remoteVideo.value.srcObject = null;
 };
@@ -114,6 +155,15 @@ video {
   width: 300px;
   height: 200px;
   margin-bottom: 10px;
-  border: 1px solid #fff;
+  border: 1px solid #ffff;
+}
+.incoming-call {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  border-radius: 5px;
 }
 </style>
