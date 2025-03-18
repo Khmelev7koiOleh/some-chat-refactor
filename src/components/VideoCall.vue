@@ -1,36 +1,41 @@
 <template>
-  <div class="video-call bg-gray-950 p-4 z-[50]">
-    <div class="text-white">My peerId: {{ peerId }}</div>
-    <video ref="localVideo" autoplay playsinline></video>
-    <video ref="remoteVideo" autoplay playsinline></video>
+  <div class="flex flex-col items-center justify-center">
+    <div class="text-white z-[50] bg-black">My peerId: {{ peerId }}</div>
+    <div class="video-call bg-gray-950 p-4 z-[50]">
+      <video ref="localVideo" autoplay playsinline></video>
+      <video ref="remoteVideo" autoplay playsinline></video>
 
-    <div class="flex flex-col gap-2">
-      <button
-        @click="startCall"
-        class="bg-black py-1 px-2 rounded-md text-white"
-      >
-        Start Call
-      </button>
-      <button @click="endCall" class="bg-black py-1 px-2 rounded-md text-white">
-        End Call
-      </button>
-    </div>
+      <div class="flex flex-col gap-2">
+        <button
+          @click="startCall"
+          class="bg-black py-1 px-2 rounded-md text-white"
+        >
+          Start Call
+        </button>
+        <button
+          @click="endCall"
+          class="bg-black py-1 px-2 rounded-md text-white"
+        >
+          End Call
+        </button>
+      </div>
 
-    <!-- Incoming Call Notification -->
-    <div v-if="incomingCall" class="incoming-call">
-      <p>Incoming call from {{ incomingCallerId }}</p>
-      <button
-        @click="acceptCall"
-        class="bg-green-500 py-1 px-2 rounded-md text-white"
-      >
-        Accept
-      </button>
-      <button
-        @click="rejectCall"
-        class="bg-red-500 py-1 px-2 rounded-md text-white"
-      >
-        Reject
-      </button>
+      <!-- Incoming Call Notification -->
+      <div v-if="incomingCall" class="incoming-call">
+        <p>Incoming call from {{ incomingCallerId }}</p>
+        <button
+          @click="acceptCall"
+          class="bg-green-500 py-1 px-2 rounded-md text-white"
+        >
+          Accept
+        </button>
+        <button
+          @click="rejectCall"
+          class="bg-red-500 py-1 px-2 rounded-md text-white"
+        >
+          Reject
+        </button>
+      </div>
     </div>
   </div>
 </template>
