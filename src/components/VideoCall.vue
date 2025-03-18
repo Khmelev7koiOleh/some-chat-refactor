@@ -124,7 +124,17 @@ const startCall = async () => {
     return;
   }
 
-  console.log("📡 Sending call request to:", callTo.value);
+  // If no peer connection, reinitialize
+  if (!peer.value.open) {
+    console.log("Reinitializing peer...");
+    peer.value = new Peer();
+    peer.value.on("open", (id) => {
+      console.log("Reinitialized Peer ID:", id);
+      peerId.value = id;
+    });
+  }
+
+  console.log("Sending call request to:", callTo.value);
 
   // Send a Firestore message with the call request
   await addDoc(collection(db, "messages"), {
@@ -135,7 +145,7 @@ const startCall = async () => {
     timestamp: new Date(),
   });
 
-  console.log("✅ Call request sent!");
+  console.log("Call request sent!");
 };
 
 // Accept Call (Receiver)
@@ -175,6 +185,10 @@ const endCall = () => {
   }
   localVideo.value.srcObject = null;
   remoteVideo.value.srcObject = null;
+
+  // Reset call object to allow new calls to be accepted
+  call.value = null;
+  incomingCall.value = false; // Reset incoming call state
 };
 </script>
 
