@@ -46,13 +46,28 @@ onMounted(() => {
 
   // Handle incoming calls
   peer.value.on("call", (incomingCallObj) => {
-    console.log("Incoming call from peer:", incomingCallObj.peer);
+    console.log("🚀 Incoming PeerJS call received!", incomingCallObj);
     incomingCall.value = true;
-    incomingCallerId.value = "Unknown User"; // Can be replaced with fetched data
+    incomingCallerId.value = "Unknown User"; // Replace with real user data if available
     incomingPeerId.value = incomingCallObj.peer;
 
-    // Store call object
-    call.value = incomingCallObj;
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        localVideo.value.srcObject = stream;
+        incomingCallObj.answer(stream);
+
+        incomingCallObj.on("stream", (remoteStream) => {
+          console.log("✅ Received remote stream");
+          remoteVideo.value.srcObject = remoteStream;
+        });
+
+        call.value = incomingCallObj;
+        incomingCall.value = false;
+      })
+      .catch((err) => {
+        console.error("🎥 Media access error", err);
+      });
   });
 
   // Listen for Firestore call requests (only needed for initiating a call)
@@ -63,12 +78,41 @@ onMounted(() => {
   );
 
   onSnapshot(q, (snapshot) => {
+    console.log("Checking Firestore for incoming calls...");
     snapshot.forEach((doc) => {
       const data = doc.data();
-      console.log("Received Firestore call request from:", data.sender);
+      console.log("📞 New call request received:", data);
+
       incomingCall.value = true;
       incomingCallerId.value = data.sender;
       incomingPeerId.value = data.peerId;
+
+      // 🛠 If `peer.on("call")` didn't trigger, manually accept the call
+      if (!call.value) {
+        console.log(
+          "🔄 Manually handling call for peer:",
+          incomingPeerId.value
+        );
+        navigator.mediaDevices
+          .getUserMedia({ video: true, audio: true })
+          .then((stream) => {
+            localVideo.value.srcObject = stream;
+
+            // Manually answer the call
+            const manualCall = peer.value.call(incomingPeerId.value, stream);
+
+            manualCall.on("stream", (remoteStream) => {
+              console.log("✅ Received remote stream from manual call");
+              remoteVideo.value.srcObject = remoteStream;
+            });
+
+            call.value = manualCall;
+            incomingCall.value = false;
+          })
+          .catch((err) => {
+            console.error("🎥 Media access error", err);
+          });
+      }
     });
   });
 });
@@ -80,7 +124,7 @@ const startCall = async () => {
     return;
   }
 
-  console.log("Sending call request to:", callTo.value);
+  console.log("📡 Sending call request to:", callTo.value);
 
   // Send a Firestore message with the call request
   await addDoc(collection(db, "messages"), {
@@ -91,7 +135,7 @@ const startCall = async () => {
     timestamp: new Date(),
   });
 
-  console.log("Call request sent!");
+  console.log("✅ Call request sent!");
 };
 
 // Accept Call (Receiver)
@@ -108,15 +152,14 @@ const acceptCall = () => {
 
       // Listen for the remote stream
       call.value.on("stream", (remoteStream) => {
-        console.log("Received remote stream from caller");
+        console.log("✅ Received remote stream from caller");
         remoteVideo.value.srcObject = remoteStream;
       });
 
-      // Hide call UI after answering
       incomingCall.value = false;
     })
     .catch((err) => {
-      console.error("Error accessing media devices", err);
+      console.error("🎥 Error accessing media devices", err);
     });
 };
 
