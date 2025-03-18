@@ -1,22 +1,17 @@
 <template>
   <div class="video-call bg-gray-950 p-4">
     <p class="text-white">Your Peer ID: {{ peerId }}</p>
-
     <video ref="localVideo" autoplay playsinline></video>
     <video ref="remoteVideo" autoplay playsinline></video>
 
     <div class="flex flex-col gap-2">
       <button
         @click="startCall"
-        class="bg-green-600 py-1 px-2 rounded-md text-white"
+        class="bg-black py-1 px-2 rounded-md text-white"
       >
-        Call User
+        Start Call
       </button>
-
-      <button
-        @click="endCall"
-        class="bg-red-600 py-1 px-2 rounded-md text-white"
-      >
+      <button @click="endCall" class="bg-black py-1 px-2 rounded-md text-white">
         End Call
       </button>
     </div>
@@ -25,7 +20,6 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { getDatabase, ref as dbRef, get } from "firebase/database";
 import Peer from "peerjs";
 
 const localVideo = ref(null);
@@ -34,12 +28,8 @@ const peer = ref(null);
 const call = ref(null);
 const peerId = ref(null);
 
-const db = getDatabase();
-const userId = "user123"; // Current user ID (replace with real auth user)
-const otherUserId = "user456"; // The person you're chatting with
-
 onMounted(() => {
-  peer.value = new Peer();
+  peer.value = new Peer(); // Create PeerJS instance
 
   peer.value.on("open", (id) => {
     console.log("My Peer ID:", id);
@@ -58,39 +48,57 @@ onMounted(() => {
           remoteVideo.value.srcObject = remoteStream;
         });
 
+        incomingCall.on("error", (error) =>
+          console.error("Call error:", error)
+        );
+
         call.value = incomingCall;
-      });
+      })
+      .catch((error) => console.error("Error accessing media devices:", error));
+  });
+
+  peer.value.on("error", (err) => {
+    console.error("Peer error:", err);
   });
 });
 
-const startCall = async () => {
-  // Fetch the other user's Peer ID from Firebase
-  const snapshot = await get(dbRef(db, `users/${otherUserId}/peerId`));
+const startCall = () => {
+  const friendId = prompt("Enter your friend's Peer ID:");
 
-  if (snapshot.exists()) {
-    const friendPeerId = snapshot.val();
-    console.log("Calling user with Peer ID:", friendPeerId);
-
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        localVideo.value.srcObject = stream;
-
-        const outgoingCall = peer.value.call(friendPeerId, stream); // Call dynamically retrieved Peer ID
-
-        outgoingCall.on("stream", (remoteStream) => {
-          remoteVideo.value.srcObject = remoteStream;
-        });
-
-        call.value = outgoingCall;
-      });
-  } else {
-    console.error("No Peer ID found for user");
+  if (!friendId) {
+    alert("Peer ID is required to make a call!");
+    return;
   }
+
+  navigator.mediaDevices
+    .getUserMedia({ video: true, audio: true })
+    .then((stream) => {
+      localVideo.value.srcObject = stream;
+
+      console.log("Calling:", friendId);
+      const outgoingCall = peer.value.call(friendId, stream); // Initiate a call
+
+      if (!outgoingCall) {
+        console.error("Call could not be placed.");
+        return;
+      }
+
+      outgoingCall.on("stream", (remoteStream) => {
+        remoteVideo.value.srcObject = remoteStream;
+      });
+
+      outgoingCall.on("error", (error) => console.error("Call error:", error));
+
+      call.value = outgoingCall;
+    })
+    .catch((error) => console.error("Error accessing media devices:", error));
 };
 
 const endCall = () => {
-  call.value?.close();
+  if (call.value) {
+    call.value.close();
+    console.log("Call ended");
+  }
   localVideo.value.srcObject = null;
   remoteVideo.value.srcObject = null;
 };
