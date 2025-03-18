@@ -1,5 +1,5 @@
 <template>
-  <div class="video-call bg-gray-950 p-4">
+  <div class="video-call bg-gray-950 p-4 z-[20]">
     <div class="text-white">My peerId: {{ peerId }}</div>
     <video ref="localVideo" autoplay playsinline></video>
     <video ref="remoteVideo" autoplay playsinline></video>
