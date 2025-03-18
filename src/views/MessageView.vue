@@ -129,7 +129,7 @@ onMounted(() => {
             @click="messageViewOpen = false"
           />
         </div>
-        <div class="text-white">{{ peerRef }}</div>
+        <!-- <div class="text-white">{{ peerRef }}</div> -->
         <img
           :src="userDataForChat[0].picture"
           class="w-12 h-12 rounded-full"
@@ -179,7 +179,7 @@ onMounted(() => {
       </div> -->
       <div class="w-[300px] h-[300px] fixed top-[20%] left-[5vw] z-[-0]">
         <div class="flex items-center justify-center">
-          <VideoCall :callTo="peerRef" />
+          <VideoCall :callTo="userDataForChat[0].id" />
         </div>
       </div>
       <div>
