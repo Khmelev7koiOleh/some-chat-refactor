@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted } from "vue";
 import Peer from "peerjs";
 import {
   getFirestore,
@@ -79,7 +79,7 @@ onMounted(() => {
   peer.value.on("call", (incomingCallObj) => {
     console.log("Incoming call...");
     incomingCall.value = true;
-    incomingCallerId.value = "Unknown User"; // You can improve this by fetching sender's name
+    incomingCallerId.value = "Unknown User"; // You can improve this by fetching sender's name from Firestore or other service
     incomingPeerId.value = incomingCallObj.peer; // Store peer ID for answering
   });
 
@@ -123,6 +123,8 @@ const startCall = async () => {
 
 // Accept call
 const acceptCall = () => {
+  if (!incomingPeerId.value) return;
+
   navigator.mediaDevices
     .getUserMedia({ video: true, audio: true })
     .then((stream) => {
@@ -135,6 +137,9 @@ const acceptCall = () => {
 
       call.value = answeredCall;
       incomingCall.value = false; // Hide call UI after answering
+    })
+    .catch((err) => {
+      console.error("Error accessing media devices", err);
     });
 };
 
@@ -145,7 +150,9 @@ const rejectCall = () => {
 
 // End call
 const endCall = () => {
-  call.value?.close();
+  if (call.value) {
+    call.value.close();
+  }
   localVideo.value.srcObject = null;
   remoteVideo.value.srcObject = null;
 };
