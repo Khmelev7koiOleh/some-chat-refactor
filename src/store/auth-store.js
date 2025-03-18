@@ -301,38 +301,6 @@ export const useAuthStore = defineStore(
         console.log("Available Users:", peerUsers.value);
       });
     };
-    const callUser = (targetPeerId) => {
-      const peer = new Peer();
-      if (!peer) {
-        console.error("Peer instance is not initialized.");
-        return;
-      }
-
-      if (!targetPeerId) {
-        console.error("Invalid target Peer ID.");
-        return;
-      }
-
-      console.log("Calling Peer ID:", targetPeerId);
-
-      navigator.mediaDevices
-        .getUserMedia({ video: true, audio: true })
-        .then((stream) => {
-          console.log("Got user media stream", stream);
-          const call = peer.call(targetPeerId, stream); // ✅ Use global `peer`
-
-          call.on("stream", (remoteStream) => {
-            document.getElementById("remoteVideo").srcObject = remoteStream;
-          });
-
-          call.on("error", (error) => {
-            console.error("Call error:", error);
-          });
-        })
-        .catch((error) =>
-          console.error("Error accessing media devices", error)
-        );
-    };
 
     const logout = async () => {
       try {
