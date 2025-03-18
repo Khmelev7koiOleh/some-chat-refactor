@@ -338,7 +338,7 @@ export const useAuthStore = defineStore(
       currentChat,
       getCommonChatsByUser,
       commonChat,
-      callUser,
+
       peerUsers,
       getAllChatsByUser,
       getChatById,
