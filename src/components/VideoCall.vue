@@ -224,10 +224,10 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col items-center justify-center">
-    <!-- <div class="text-white z-[50] bg-black">My peerId: {{ peerId }}</div> -->
+    <div class="text-white z-[50] bg-black">My peerId: {{ peerId }}</div>
+    <div class="text-white z-[50] bg-black">callTo: {{ callTo }}</div>
 
     <div class="video-call bg-gray-950 p-4 z-[50]">
-      <div class="text-white bg-black p">Call to: {{ callTo }}</div>
       <video ref="localVideo" autoplay playsinline></video>
       <video ref="remoteVideo" autoplay playsinline></video>
 
@@ -273,14 +273,13 @@ onMounted(() => {
   align-items: center;
 }
 video {
-  width: 200px;
-  height: 150px;
+  width: 300px;
+  height: 200px;
   margin-bottom: 10px;
   border: 1px solid #ffff;
 }
 .incoming-call {
-  background: rgba(114, 17, 162, 0.8);
-  z-index: 50;
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   padding: 10px;
   position: absolute;
