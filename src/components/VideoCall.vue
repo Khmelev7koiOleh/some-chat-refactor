@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watchEffect } from "vue";
+import { ref, onMounted } from "vue";
 import { toRefs } from "vue";
 import Peer from "peerjs";
 import {
@@ -32,6 +32,7 @@ const peerId = ref(null);
 const incomingCall = ref(false);
 const incomingCallerId = ref(null);
 const incomingPeerId = ref(null);
+const incomingCallObj = ref(null); // Store the incoming call object
 
 onMounted(() => {
   console.log("Logged in user ID:", userId);
@@ -45,33 +46,12 @@ onMounted(() => {
   });
 
   // Handle incoming calls
-  peer.value.on("call", (incomingCallObj) => {
-    console.log("🚀 Incoming PeerJS call received!", incomingCallObj);
+  peer.value.on("call", (call) => {
+    console.log("🚀 Incoming PeerJS call received!", call);
     incomingCall.value = true;
     incomingCallerId.value = "Unknown User"; // Replace with real user data if available
-    incomingPeerId.value = incomingCallObj.peer;
-
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        if (localVideo.value) {
-          localVideo.value.srcObject = stream;
-        }
-        incomingCallObj.answer(stream);
-
-        incomingCallObj.on("stream", (remoteStream) => {
-          console.log("✅ Received remote stream");
-          if (remoteVideo.value) {
-            remoteVideo.value.srcObject = remoteStream;
-          }
-        });
-
-        call.value = incomingCallObj;
-        incomingCall.value = false;
-      })
-      .catch((err) => {
-        console.error("🎥 Media access error", err);
-      });
+    incomingPeerId.value = call.peer;
+    incomingCallObj.value = call; // Store the incoming call object
   });
 
   // Listen for Firestore call requests (only needed for initiating a call)
@@ -91,35 +71,25 @@ onMounted(() => {
       incomingCallerId.value = data.sender;
       incomingPeerId.value = data.peerId;
 
-      // 🛠 If `peer.on("call")` didn't trigger, manually accept the call
+      // If `peer.on("call")` didn't trigger, manually store the call details
       if (!call.value) {
         console.log(
           "🔄 Manually handling call for peer:",
           incomingPeerId.value
         );
-        navigator.mediaDevices
-          .getUserMedia({ video: true, audio: true })
-          .then((stream) => {
-            if (localVideo.value) {
-              localVideo.value.srcObject = stream;
-            }
-
-            // Manually answer the call
+        incomingCallObj.value = {
+          peer: incomingPeerId.value,
+          answer: (stream) => {
             const manualCall = peer.value.call(incomingPeerId.value, stream);
-
             manualCall.on("stream", (remoteStream) => {
               console.log("✅ Received remote stream from manual call");
               if (remoteVideo.value) {
                 remoteVideo.value.srcObject = remoteStream;
               }
             });
-
             call.value = manualCall;
-            incomingCall.value = false;
-          })
-          .catch((err) => {
-            console.error("🎥 Media access error", err);
-          });
+          },
+        };
       }
     });
   });
@@ -158,7 +128,7 @@ const startCall = async () => {
 
 // Accept Call (Receiver)
 const acceptCall = () => {
-  if (!incomingPeerId.value) return;
+  if (!incomingCallObj.value) return;
 
   navigator.mediaDevices
     .getUserMedia({ video: true, audio: true })
@@ -168,10 +138,10 @@ const acceptCall = () => {
       }
 
       // Answer the incoming call with our media stream
-      call.value.answer(stream);
+      incomingCallObj.value.answer(stream);
 
       // Listen for the remote stream
-      call.value.on("stream", (remoteStream) => {
+      incomingCallObj.value.on("stream", (remoteStream) => {
         console.log("✅ Received remote stream from caller");
         if (remoteVideo.value) {
           remoteVideo.value.srcObject = remoteStream;
@@ -179,6 +149,7 @@ const acceptCall = () => {
       });
 
       incomingCall.value = false;
+      incomingCallObj.value = null; // Reset the incoming call object
     })
     .catch((err) => {
       console.error("🎥 Error accessing media devices", err);
@@ -188,6 +159,7 @@ const acceptCall = () => {
 // Reject call
 const rejectCall = () => {
   incomingCall.value = false;
+  incomingCallObj.value = null; // Reset the incoming call object
 };
 
 // End call
