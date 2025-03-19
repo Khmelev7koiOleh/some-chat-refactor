@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, toRefs } from "vue";
 import Peer from "peerjs";
 import {
   getFirestore,
@@ -13,6 +13,7 @@ import { getAuth } from "firebase/auth";
 
 // PROPS
 const props = defineProps({ callTo: { type: String } });
+const { callTo } = toRefs(props);
 const db = getFirestore();
 const auth = getAuth();
 const userId = auth.currentUser?.uid || "unknown_user"; // Get logged-in user ID
