@@ -208,7 +208,7 @@ const cleanupCall = () => {
 
 <template>
   <div class="flex flex-col items-center justify-center">
-    <div class="text-white bg-black p-2 rounded-md">
+    <div class="text-white bg-blue-800 p-2 rounded-md">
       My Peer ID: {{ peerId }}
     </div>
     <div class="text-white bg-black p-2 rounded-md">Call To: {{ callTo }}</div>
