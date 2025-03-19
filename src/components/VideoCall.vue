@@ -9,12 +9,14 @@ import {
   onSnapshot,
   query,
   where,
+  doc,
+  deleteDoc,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 // PROPS
 const props = defineProps({
-  callTo: { type: String, required: true }, // Ensure callTo is required
+  callTo: { type: String, required: true }, // ID of the user to call
 });
 const { callTo } = toRefs(props);
 
@@ -31,8 +33,8 @@ const call = ref(null);
 const peerId = ref(null);
 const incomingCall = ref(false);
 const incomingCallerId = ref(null);
-const incomingPeerId = ref(null);
-const incomingCallObj = ref(null); // Store the incoming call object
+const incomingCallerPeerId = ref(null); // Peer ID of the caller
+const incomingCallDocId = ref(null); // Firestore document ID for the call request
 
 // Cleanup function to close streams and connections
 const cleanup = () => {
@@ -49,7 +51,9 @@ const cleanup = () => {
     remoteVideo.value.srcObject = null;
   }
   incomingCall.value = false;
-  incomingCallObj.value = null;
+  incomingCallerId.value = null;
+  incomingCallerPeerId.value = null;
+  incomingCallDocId.value = null;
 };
 
 // Initialize PeerJS
@@ -63,10 +67,29 @@ const initializePeer = () => {
 
   peer.value.on("call", (incomingCall) => {
     console.log("🚀 Incoming PeerJS call received!", incomingCall);
-    incomingCall.value = true;
-    incomingCallerId.value = "Unknown User"; // Replace with real user data if available
-    incomingPeerId.value = incomingCall.peer;
-    incomingCallObj.value = incomingCall; // Store the incoming call object
+
+    // Answer the call automatically (no need for callee to click "Accept" again)
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        if (localVideo.value) {
+          localVideo.value.srcObject = stream;
+        }
+
+        // Answer the call with the local stream
+        incomingCall.answer(stream);
+
+        // Listen for the remote stream
+        incomingCall.on("stream", (remoteStream) => {
+          console.log("✅ Received remote stream from caller");
+          if (remoteVideo.value) {
+            remoteVideo.value.srcObject = remoteStream;
+          }
+        });
+      })
+      .catch((err) => {
+        console.error("🎥 Error accessing media devices", err);
+      });
   });
 
   peer.value.on("error", (err) => {
@@ -79,9 +102,9 @@ const initializePeer = () => {
 // Listen for Firestore call requests
 const setupFirestoreListener = () => {
   const q = query(
-    collection(db, "messages"),
+    collection(db, "calls"),
     where("receiver", "==", userId),
-    where("type", "==", "call-request")
+    where("status", "==", "pending")
   );
 
   const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -91,28 +114,8 @@ const setupFirestoreListener = () => {
 
       incomingCall.value = true;
       incomingCallerId.value = data.sender;
-      incomingPeerId.value = data.peerId;
-
-      // If `peer.on("call")` didn't trigger, manually store the call details
-      if (!call.value) {
-        console.log(
-          "🔄 Manually handling call for peer:",
-          incomingPeerId.value
-        );
-        incomingCallObj.value = {
-          peer: incomingPeerId.value,
-          answer: (stream) => {
-            const manualCall = peer.value.call(incomingPeerId.value, stream);
-            manualCall.on("stream", (remoteStream) => {
-              console.log("✅ Received remote stream from manual call");
-              if (remoteVideo.value) {
-                remoteVideo.value.srcObject = remoteStream;
-              }
-            });
-            call.value = manualCall;
-          },
-        };
-      }
+      incomingCallerPeerId.value = data.callerPeerId;
+      incomingCallDocId.value = doc.id; // Store the Firestore document ID
     });
   });
 
@@ -130,11 +133,11 @@ const startCall = async () => {
 
   // Send a Firestore message with the call request
   try {
-    await addDoc(collection(db, "messages"), {
+    await addDoc(collection(db, "calls"), {
       sender: userId,
       receiver: callTo.value,
-      type: "call-request",
-      peerId: peerId.value,
+      callerPeerId: peerId.value, // Send the caller's peerId
+      status: "pending", // Call status
       timestamp: new Date(),
     });
     console.log("Call request sent!");
@@ -143,9 +146,12 @@ const startCall = async () => {
   }
 };
 
-// Accept Call (Receiver)
+// Accept Call (Callee)
 const acceptCall = async () => {
-  if (!incomingCallObj.value) return;
+  if (!incomingCallerPeerId.value) {
+    console.error("No incoming call to accept");
+    return;
+  }
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -157,28 +163,37 @@ const acceptCall = async () => {
       localVideo.value.srcObject = stream;
     }
 
-    // Answer the incoming call with our media stream
-    incomingCallObj.value.answer(stream);
+    // Call the caller using their peerId
+    call.value = peer.value.call(incomingCallerPeerId.value, stream);
 
     // Listen for the remote stream
-    incomingCallObj.value.on("stream", (remoteStream) => {
+    call.value.on("stream", (remoteStream) => {
       console.log("✅ Received remote stream from caller");
       if (remoteVideo.value) {
         remoteVideo.value.srcObject = remoteStream;
       }
     });
 
+    // Update the call status in Firestore to "accepted"
+    if (incomingCallDocId.value) {
+      await deleteDoc(doc(db, "calls", incomingCallDocId.value));
+    }
+
     incomingCall.value = false;
-    incomingCallObj.value = null; // Reset the incoming call object
+    incomingCallerId.value = null;
+    incomingCallerPeerId.value = null;
+    incomingCallDocId.value = null;
   } catch (err) {
     console.error("🎥 Error accessing media devices", err);
   }
 };
 
 // Reject call
-const rejectCall = () => {
-  incomingCall.value = false;
-  incomingCallObj.value = null; // Reset the incoming call object
+const rejectCall = async () => {
+  if (incomingCallDocId.value) {
+    await deleteDoc(doc(db, "calls", incomingCallDocId.value));
+  }
+  cleanup();
 };
 
 // End call
@@ -206,7 +221,7 @@ onMounted(() => {
 <template>
   <div class="flex flex-col items-center justify-center">
     <div class="text-white z-[50] bg-black">My peerId: {{ peerId }}</div>
-    <div class="text-white z-[50] bg-black">callTo: {{ userId }}</div>
+    <div class="text-white z-[50] bg-black">callTo: {{ callTo }}</div>
 
     <div class="video-call bg-gray-950 p-4 z-[50]">
       <video ref="localVideo" autoplay playsinline></video>
