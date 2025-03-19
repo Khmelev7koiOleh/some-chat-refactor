@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, onBeforeUnmount } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { toRefs } from "vue";
 import Peer from "peerjs";
 import {
@@ -9,13 +9,12 @@ import {
   onSnapshot,
   query,
   where,
-  deleteDoc,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 // PROPS
 const props = defineProps({
-  callTo: { type: String },
+  callTo: { type: String, required: true }, // Ensure callTo is required
 });
 const { callTo } = toRefs(props);
 
@@ -33,61 +32,51 @@ const peerId = ref(null);
 const incomingCall = ref(false);
 const incomingCallerId = ref(null);
 const incomingPeerId = ref(null);
-const incomingCallObj = ref(null);
-const unsubscribe = ref(null); // Firestore listener cleanup
+const incomingCallObj = ref(null); // Store the incoming call object
 
-// Media stream ref
-const localStream = ref(null);
-
-onMounted(() => {
-  console.log("🔹 Logged in user ID:", userId);
-  initializePeer();
-
-  // Firestore listener for incoming call requests
-  setupFirestoreListener();
-});
-
-onBeforeUnmount(() => {
-  cleanupCall();
-  if (unsubscribe.value) {
-    unsubscribe.value();
+// Cleanup function to close streams and connections
+const cleanup = () => {
+  if (call.value) {
+    call.value.close();
+    call.value = null;
   }
-  if (peer.value) {
-    peer.value.destroy();
+  if (localVideo.value?.srcObject) {
+    localVideo.value.srcObject.getTracks().forEach((track) => track.stop());
+    localVideo.value.srcObject = null;
   }
-});
+  if (remoteVideo.value?.srcObject) {
+    remoteVideo.value.srcObject.getTracks().forEach((track) => track.stop());
+    remoteVideo.value.srcObject = null;
+  }
+  incomingCall.value = false;
+  incomingCallObj.value = null;
+};
 
-// ✅ **Initialize PeerJS**
+// Initialize PeerJS
 const initializePeer = () => {
   peer.value = new Peer();
 
   peer.value.on("open", (id) => {
-    console.log("🎯 My Peer ID:", id);
+    console.log("My Peer ID:", id);
     peerId.value = id;
   });
 
-  peer.value.on("call", (incoming) => {
-    console.log("🚀 Incoming PeerJS call received!", incoming);
+  peer.value.on("call", (incomingCall) => {
+    console.log("🚀 Incoming PeerJS call received!", incomingCall);
     incomingCall.value = true;
-    incomingPeerId.value = incoming.peer;
-    incomingCallObj.value = incoming;
+    incomingCallerId.value = "Unknown User"; // Replace with real user data if available
+    incomingPeerId.value = incomingCall.peer;
+    incomingCallObj.value = incomingCall; // Store the incoming call object
   });
 
   peer.value.on("error", (err) => {
-    console.error("⚠️ PeerJS Error:", err);
-  });
-
-  peer.value.on("disconnected", () => {
-    console.warn("🔄 PeerJS Disconnected. Reconnecting...");
-    peer.value.reconnect();
-  });
-
-  peer.value.on("close", () => {
-    console.warn("❌ PeerJS Closed");
+    console.error("PeerJS Error:", err);
+    // Reinitialize PeerJS on error
+    initializePeer();
   });
 };
 
-// ✅ **Firestore listener setup**
+// Listen for Firestore call requests
 const setupFirestoreListener = () => {
   const q = query(
     collection(db, "messages"),
@@ -95,166 +84,188 @@ const setupFirestoreListener = () => {
     where("type", "==", "call-request")
   );
 
-  unsubscribe.value = onSnapshot(q, (snapshot) => {
-    snapshot.forEach(async (doc) => {
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    snapshot.forEach((doc) => {
       const data = doc.data();
-      console.log("📞 Firestore Call Request:", data);
+      console.log("📞 New call request received:", data);
 
       incomingCall.value = true;
       incomingCallerId.value = data.sender;
       incomingPeerId.value = data.peerId;
 
-      // Auto-clean Firestore call request after processing
-      await deleteDoc(doc.ref);
+      // If `peer.on("call")` didn't trigger, manually store the call details
+      if (!call.value) {
+        console.log(
+          "🔄 Manually handling call for peer:",
+          incomingPeerId.value
+        );
+        incomingCallObj.value = {
+          peer: incomingPeerId.value,
+          answer: (stream) => {
+            const manualCall = peer.value.call(incomingPeerId.value, stream);
+            manualCall.on("stream", (remoteStream) => {
+              console.log("✅ Received remote stream from manual call");
+              if (remoteVideo.value) {
+                remoteVideo.value.srcObject = remoteStream;
+              }
+            });
+            call.value = manualCall;
+          },
+        };
+      }
     });
   });
+
+  return unsubscribe;
 };
 
-// ✅ **Start Call**
+// Start Call (Caller)
 const startCall = async () => {
   if (!peer.value || !peerId.value) {
-    console.error("⚠️ Peer not initialized");
+    console.error("Peer not initialized");
     return;
   }
 
-  console.log("📤 Sending call request to:", callTo.value);
+  console.log("Sending call request to:", callTo.value);
 
-  await addDoc(collection(db, "messages"), {
-    sender: userId,
-    receiver: callTo.value,
-    type: "call-request",
-    peerId: peerId.value,
-    timestamp: new Date(),
-  });
-
-  console.log("✅ Call request sent!");
+  // Send a Firestore message with the call request
+  try {
+    await addDoc(collection(db, "messages"), {
+      sender: userId,
+      receiver: callTo.value,
+      type: "call-request",
+      peerId: peerId.value,
+      timestamp: new Date(),
+    });
+    console.log("Call request sent!");
+  } catch (err) {
+    console.error("Error sending call request:", err);
+  }
 };
 
-// ✅ **Accept Call**
+// Accept Call (Receiver)
 const acceptCall = async () => {
-  if (!incomingCallObj.value && !incomingPeerId.value) {
-    console.error("⚠️ No incoming call to accept");
-    return;
-  }
+  if (!incomingCallObj.value) return;
 
   try {
-    localStream.value = await navigator.mediaDevices.getUserMedia({
+    const stream = await navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true,
     });
 
     if (localVideo.value) {
-      localVideo.value.srcObject = localStream.value;
+      localVideo.value.srcObject = stream;
     }
 
-    console.log("📞 Answering call from:", incomingPeerId.value);
+    // Answer the incoming call with our media stream
+    incomingCallObj.value.answer(stream);
 
-    const answeredCall = peer.value.call(
-      incomingPeerId.value,
-      localStream.value
-    );
-
-    answeredCall.on("stream", (remoteStream) => {
-      console.log("✅ Remote stream received");
+    // Listen for the remote stream
+    incomingCallObj.value.on("stream", (remoteStream) => {
+      console.log("✅ Received remote stream from caller");
       if (remoteVideo.value) {
         remoteVideo.value.srcObject = remoteStream;
       }
     });
 
-    answeredCall.on("close", () => {
-      console.log("❌ Call ended");
-      cleanupCall();
-    });
-
-    call.value = answeredCall;
     incomingCall.value = false;
-    incomingCallObj.value = null;
-  } catch (error) {
-    console.error("🎥 Error accessing media devices", error);
+    incomingCallObj.value = null; // Reset the incoming call object
+  } catch (err) {
+    console.error("🎥 Error accessing media devices", err);
   }
 };
 
-// ✅ **Reject Call**
+// Reject call
 const rejectCall = () => {
-  console.log("❌ Call Rejected");
   incomingCall.value = false;
-  incomingCallObj.value = null;
+  incomingCallObj.value = null; // Reset the incoming call object
 };
 
-// ✅ **End Call**
+// End call
 const endCall = () => {
-  if (call.value) {
-    call.value.close();
-  }
-  cleanupCall();
+  cleanup();
 };
 
-// ✅ **Cleanup Function**
-const cleanupCall = () => {
-  if (localStream.value) {
-    localStream.value.getTracks().forEach((track) => track.stop());
-    localStream.value = null;
-  }
-  if (localVideo.value) {
-    localVideo.value.srcObject = null;
-  }
-  if (remoteVideo.value) {
-    remoteVideo.value.srcObject = null;
-  }
-  call.value = null;
-  incomingCall.value = false;
-};
+// Lifecycle hooks
+onMounted(() => {
+  console.log("Logged in user ID:", userId);
+  initializePeer();
+  const unsubscribe = setupFirestoreListener();
+
+  // Cleanup on unmount
+  onUnmounted(() => {
+    cleanup();
+    if (peer.value) {
+      peer.value.destroy();
+    }
+    unsubscribe();
+  });
+});
 </script>
 
 <template>
   <div class="flex flex-col items-center justify-center">
-    <div class="text-white bg-black p-2 rounded-md">
-      My Peer ID: {{ peerId }}
-    </div>
-    <div class="text-white bg-black p-2 rounded-md">Call To: {{ callTo }}</div>
+    <div class="text-white z-[50] bg-black">My peerId: {{ peerId }}</div>
+    <div class="text-white z-[50] bg-black">callTo: {{ userId }}</div>
 
-    <div class="video-container">
+    <div class="video-call bg-gray-950 p-4 z-[50]">
       <video ref="localVideo" autoplay playsinline></video>
       <video ref="remoteVideo" autoplay playsinline></video>
-    </div>
 
-    <div class="flex flex-col gap-2 mt-4">
-      <button @click="startCall" class="btn bg-blue-500">Start Call</button>
-      <button @click="endCall" class="btn bg-red-500">End Call</button>
-    </div>
+      <div class="flex flex-col gap-2">
+        <button
+          @click="startCall"
+          class="bg-black py-1 px-2 rounded-md text-white"
+        >
+          Start Call
+        </button>
+        <button
+          @click="endCall"
+          class="bg-black py-1 px-2 rounded-md text-white"
+        >
+          End Call
+        </button>
+      </div>
 
-    <!-- Incoming Call Notification -->
-    <div v-if="incomingCall" class="incoming-call">
-      <p>📞 Incoming call from {{ incomingCallerId }}</p>
-      <button @click="acceptCall" class="btn bg-green-500">Accept</button>
-      <button @click="rejectCall" class="btn bg-gray-500">Reject</button>
+      <!-- Incoming Call Notification -->
+      <div v-if="incomingCall" class="incoming-call z-[50]">
+        <p>Incoming call from {{ incomingCallerId }}</p>
+        <button
+          @click="acceptCall"
+          class="bg-green-500 py-1 px-2 rounded-md text-white"
+        >
+          Accept
+        </button>
+        <button
+          @click="rejectCall"
+          class="bg-red-500 py-1 px-2 rounded-md text-white"
+        >
+          Reject
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.video-container {
+.video-call {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  align-items: center;
 }
 video {
-  width: 200px;
-  height: 150px;
-  border-radius: 10px;
-  border: 2px solid white;
-}
-.btn {
-  padding: 8px 12px;
-  color: white;
-  font-weight: bold;
-  border-radius: 6px;
+  width: 300px;
+  height: 200px;
+  margin-bottom: 10px;
+  border: 1px solid #ffff;
 }
 .incoming-call {
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.8);
   color: white;
-  padding: 12px;
-  border-radius: 6px;
-  margin-top: 10px;
-  text-align: center;
+  padding: 10px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  border-radius: 5px;
 }
 </style>
