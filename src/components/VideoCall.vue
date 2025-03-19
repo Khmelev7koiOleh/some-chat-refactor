@@ -16,14 +16,14 @@ import { getAuth } from "firebase/auth";
 
 // PROPS
 const props = defineProps({
-  callTo: { type: String, required: true },
+  callTo: { type: String, required: true }, // ID of the user to call
 });
 const { callTo } = toRefs(props);
 
 // Firebase setup
 const db = getFirestore();
 const auth = getAuth();
-const userId = auth.currentUser?.uid || "unknown_user";
+const userId = auth.currentUser?.uid || "unknown_user"; // Get logged-in user ID
 
 // Refs
 const localVideo = ref(null);
@@ -33,10 +33,10 @@ const call = ref(null);
 const peerId = ref(null);
 const incomingCall = ref(false);
 const incomingCallerId = ref(null);
-const incomingCallerPeerId = ref(null);
-const incomingCallDocId = ref(null);
+const incomingCallerPeerId = ref(null); // Peer ID of the caller
+const incomingCallDocId = ref(null); // Firestore document ID for the call request
 
-// Cleanup function
+// Cleanup function to close streams and connections
 const cleanup = () => {
   if (call.value) {
     call.value.close();
@@ -56,20 +56,9 @@ const cleanup = () => {
   incomingCallDocId.value = null;
 };
 
-// Initialize PeerJS with TURN server
+// Initialize PeerJS
 const initializePeer = () => {
-  peer.value = new Peer({
-    config: {
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" }, // Free STUN server
-        {
-          urls: "turn:your-turn-server.com",
-          username: "your-username",
-          credential: "your-credential",
-        }, // TURN server
-      ],
-    },
-  });
+  peer.value = new Peer();
 
   peer.value.on("open", (id) => {
     console.log("My Peer ID:", id);
@@ -79,6 +68,7 @@ const initializePeer = () => {
   peer.value.on("call", (incomingCall) => {
     console.log("🚀 Incoming PeerJS call received!", incomingCall);
 
+    // Answer the call automatically (no need for callee to click "Accept" again)
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
@@ -86,8 +76,10 @@ const initializePeer = () => {
           localVideo.value.srcObject = stream;
         }
 
+        // Answer the call with the local stream
         incomingCall.answer(stream);
 
+        // Listen for the remote stream
         incomingCall.on("stream", (remoteStream) => {
           console.log("✅ Received remote stream from caller");
           if (remoteVideo.value) {
@@ -97,13 +89,13 @@ const initializePeer = () => {
       })
       .catch((err) => {
         console.error("🎥 Error accessing media devices", err);
-        alert("Please allow access to your camera and microphone.");
       });
   });
 
   peer.value.on("error", (err) => {
     console.error("PeerJS Error:", err);
-    initializePeer(); // Reinitialize on error
+    // Reinitialize PeerJS on error
+    initializePeer();
   });
 };
 
@@ -123,31 +115,11 @@ const setupFirestoreListener = () => {
       incomingCall.value = true;
       incomingCallerId.value = data.sender;
       incomingCallerPeerId.value = data.callerPeerId;
-      incomingCallDocId.value = doc.id;
+      incomingCallDocId.value = doc.id; // Store the Firestore document ID
     });
   });
 
   return unsubscribe;
-};
-
-// Get user media with better handling
-const getUserMedia = async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" }, // Ensures front camera on phones
-      audio: true,
-    });
-
-    if (localVideo.value) {
-      localVideo.value.srcObject = stream;
-    }
-
-    return stream;
-  } catch (err) {
-    console.error("🎥 Error accessing media devices", err);
-    alert("Please allow access to your camera and microphone.");
-    return null;
-  }
 };
 
 // Start Call (Caller)
@@ -159,12 +131,13 @@ const startCall = async () => {
 
   console.log("Sending call request to:", callTo.value);
 
+  // Send a Firestore message with the call request
   try {
     await addDoc(collection(db, "calls"), {
       sender: userId,
       receiver: callTo.value,
-      callerPeerId: peerId.value,
-      status: "pending",
+      callerPeerId: peerId.value, // Send the caller's peerId
+      status: "pending", // Call status
       timestamp: new Date(),
     });
     console.log("Call request sent!");
@@ -181,11 +154,19 @@ const acceptCall = async () => {
   }
 
   try {
-    const stream = await getUserMedia();
-    if (!stream) return;
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
 
+    if (localVideo.value) {
+      localVideo.value.srcObject = stream;
+    }
+
+    // Call the caller using their peerId
     call.value = peer.value.call(incomingCallerPeerId.value, stream);
 
+    // Listen for the remote stream
     call.value.on("stream", (remoteStream) => {
       console.log("✅ Received remote stream from caller");
       if (remoteVideo.value) {
@@ -193,6 +174,7 @@ const acceptCall = async () => {
       }
     });
 
+    // Update the call status in Firestore to "accepted"
     if (incomingCallDocId.value) {
       await deleteDoc(doc(db, "calls", incomingCallDocId.value));
     }
@@ -225,6 +207,7 @@ onMounted(() => {
   initializePeer();
   const unsubscribe = setupFirestoreListener();
 
+  // Cleanup on unmount
   onUnmounted(() => {
     cleanup();
     if (peer.value) {
@@ -237,8 +220,10 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col items-center justify-center">
+    <!-- <div class="text-white z-[50] bg-black">My peerId: {{ peerId }}</div>
+    <div class="text-white z-[50] bg-black">callTo: {{ callTo }}</div> -->
+
     <div class="video-call bg-gray-950 p-4 z-[50]">
-      <div class="text-white bg-black pb-2">Call to: {{ callTo }}</div>
       <video ref="localVideo" autoplay playsinline></video>
       <video ref="remoteVideo" autoplay playsinline></video>
 
@@ -257,6 +242,7 @@ onMounted(() => {
         </button>
       </div>
 
+      <!-- Incoming Call Notification -->
       <div v-if="incomingCall" class="incoming-call z-[50]">
         <p>Incoming call from {{ incomingCallerId }}</p>
         <button
@@ -275,44 +261,26 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
 <style scoped>
 .video-call {
-  width: 100%;
-  max-width: 400px;
-  border-radius: 12px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-
 video {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-  background: black;
-  margin-bottom: 8px;
+  width: 200px;
+  height: 150px;
+  margin-bottom: 10px;
+  border: 1px solid #ffff;
 }
-
 .incoming-call {
   background: rgba(0, 0, 0, 0.8);
+  color: white;
   padding: 10px;
-  border-radius: 8px;
   position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-}
-
-button {
-  width: 100%;
-  padding: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-button:hover {
-  opacity: 0.8;
+  top: 20px;
+  right: 20px;
+  border-radius: 5px;
 }
 </style>
