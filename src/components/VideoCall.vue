@@ -269,8 +269,8 @@ onMounted(() => {
   align-items: center;
 }
 video {
-  width: 300px;
-  height: 200px;
+  width: 200px;
+  height: 150px;
   margin-bottom: 10px;
   border: 1px solid #ffff;
 }
