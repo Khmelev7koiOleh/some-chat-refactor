@@ -1,318 +1,321 @@
-<script setup>
-import { ref, onMounted, onUnmounted } from "vue";
-import { toRefs } from "vue";
-import Peer from "peerjs";
+<script setup lang="ts">
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  where,
-  doc,
-  deleteDoc,
-} from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+  ref,
+  computed,
+  watchEffect,
+  onMounted,
+  nextTick,
+  watch,
+  onBeforeMount,
+} from "vue";
+import moment from "moment";
+import { storeToRefs } from "pinia";
+import VideoCall from "../components/VideoCall.vue";
+import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
+import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
+import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
+import EmoticonExcitedOutlineIcon from "vue-material-design-icons/EmoticonExcitedOutline.vue";
+import VideoIcon from "vue-material-design-icons/Video.vue";
+import ArrowLeftIcon from "vue-material-design-icons/ArrowLeft.vue";
+import PlusIcon from "vue-material-design-icons/Plus.vue";
+import SendIcon from "vue-material-design-icons/Send.vue";
+import { useScrollTo } from "../composables/scrollTo";
+import { useAuthStore } from "../store/auth-store";
+import { useMessageViewStore } from "../store/messageView-store";
+import { useVideoCallOpen } from "../store/video-call-store";
+import ScrollToBottomButton from "../components/ScrollToBottomButton.vue";
+import { useChangeBackground } from "../composables/changeBackground";
+import EmojiPicker from "vue3-emoji-picker";
+import "vue3-emoji-picker/css";
+const { changeBackground, random } = useChangeBackground();
+const messageViewStore = useMessageViewStore();
+const { messageViewOpen } = storeToRefs(messageViewStore);
 
-// PROPS
-const props = defineProps({
-  callTo: { type: String, required: true },
+const videoCall = useVideoCallOpen();
+const { videoCallOpen } = storeToRefs(videoCall);
+const authStore = useAuthStore();
+const {
+  userDataForChat,
+  user,
+  currentChatId,
+  currentChat,
+  showFindFriends,
+  peerUsers,
+  chats,
+} = storeToRefs(authStore);
+const chatContainerId = "MessageSection";
+
+const { scrollToLastMessage } = useScrollTo();
+
+let message = ref("");
+let changeThemeOpen = ref(false);
+
+const peerRef = ref("");
+
+watchEffect(() => {
+  console.log(currentChat);
 });
-const { callTo } = toRefs(props);
+const showPicker = ref(false);
 
-// Firebase setup
-const db = getFirestore();
-const auth = getAuth();
-const userId = auth.currentUser?.uid || "unknown_user";
-
-// Refs
-const localVideo = ref(null);
-const remoteVideo = ref(null);
-const peer = ref(null);
-const call = ref(null);
-const peerId = ref(null);
-const incomingCall = ref(false);
-const incomingCallerId = ref(null);
-const incomingCallerPeerId = ref(null);
-const incomingCallDocId = ref(null);
-
-// Cleanup function
-const cleanup = () => {
-  if (call.value) {
-    call.value.close();
-    call.value = null;
-  }
-  if (localVideo.value?.srcObject) {
-    localVideo.value.srcObject.getTracks().forEach((track) => track.stop());
-    localVideo.value.srcObject = null;
-  }
-  if (remoteVideo.value?.srcObject) {
-    remoteVideo.value.srcObject.getTracks().forEach((track) => track.stop());
-    remoteVideo.value.srcObject = null;
-  }
-  incomingCall.value = false;
-  incomingCallerId.value = null;
-  incomingCallerPeerId.value = null;
-  incomingCallDocId.value = null;
+const addEmoji = (emoji) => {
+  message.value += emoji.i; // Append the selected emoji to the input
 };
+const sendMessage = async () => {
+  if (!message.value.trim()) return; // Prevent sending empty messages
 
-// Initialize PeerJS with TURN server
-const initializePeer = () => {
-  peer.value = new Peer({
-    config: {
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" }, // Free STUN server
-        {
-          urls: "turn:your-turn-server.com",
-          username: "your-username",
-          credential: "your-credential",
-        }, // TURN server
-      ],
-    },
-  });
-
-  peer.value.on("open", (id) => {
-    console.log("My Peer ID:", id);
-    peerId.value = id;
-  });
-
-  peer.value.on("call", (incomingCall) => {
-    console.log("🚀 Incoming PeerJS call received!", incomingCall);
-
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        if (localVideo.value) {
-          localVideo.value.srcObject = stream;
-        }
-
-        incomingCall.answer(stream);
-
-        incomingCall.on("stream", (remoteStream) => {
-          console.log("✅ Received remote stream from caller");
-          if (remoteVideo.value) {
-            remoteVideo.value.srcObject = remoteStream;
-          }
-        });
-      })
-      .catch((err) => {
-        console.error("🎥 Error accessing media devices", err);
-        alert("Please allow access to your camera and microphone.");
-      });
-  });
-
-  peer.value.on("error", (err) => {
-    console.error("PeerJS Error:", err);
-    initializePeer(); // Reinitialize on error
-  });
-};
-
-// Listen for Firestore call requests
-const setupFirestoreListener = () => {
-  const q = query(
-    collection(db, "calls"),
-    where("receiver", "==", userId),
-    where("status", "==", "pending")
-  );
-
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      console.log("📞 New call request received:", data);
-
-      incomingCall.value = true;
-      incomingCallerId.value = data.sender;
-      incomingCallerPeerId.value = data.callerPeerId;
-      incomingCallDocId.value = doc.id;
-    });
-  });
-
-  return unsubscribe;
-};
-
-// Get user media with better handling
-const getUserMedia = async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" }, // Ensures front camera on phones
-      audio: true,
-    });
-
-    if (localVideo.value) {
-      localVideo.value.srcObject = stream;
-    }
-
-    return stream;
-  } catch (err) {
-    console.error("🎥 Error accessing media devices", err);
-    alert("Please allow access to your camera and microphone.");
-    return null;
-  }
-};
-
-// Start Call (Caller)
-const startCall = async () => {
-  if (!peer.value || !peerId.value) {
-    console.error("Peer not initialized");
+  if (!userDataForChat.value.length || !userDataForChat.value[0]?.id) {
+    console.error("Chat ID is missing!");
     return;
   }
 
-  console.log("Sending call request to:", callTo.value);
+  await authStore.sendMessage({
+    message: message.value,
+    chatId: currentChatId.value, // Now safely accessed
+  });
 
-  try {
-    await addDoc(collection(db, "calls"), {
-      sender: userId,
-      receiver: callTo.value,
-      callerPeerId: peerId.value,
-      status: "pending",
-      timestamp: new Date(),
-    });
-    console.log("Call request sent!");
-  } catch (err) {
-    console.error("Error sending call request:", err);
-  }
+  message.value = ""; // Clear input after sending
 };
 
-// Accept Call (Callee)
-const acceptCall = async () => {
-  if (!incomingCallerPeerId.value) {
-    console.error("No incoming call to accept");
-    return;
-  }
+// const callToUser = (id) => {
+//   console.log(id);
+//   console.log(currentChat.value.participants[1]);
+//   // Find the user in the list whose id matches currentChat.participants[0].id
+//   const targetUser = peerUsers.value.find(
+//     (user) => id === currentChat.value.participants[0]
+//   );
 
-  try {
-    const stream = await getUserMedia();
-    if (!stream) return;
+//   // If targetUser is found, initiate the call
+//   if (targetUser) {
+//     authStore.callUser(targetUser.peerId); // Assuming callUser is in your store and accepts peerId
 
-    call.value = peer.value.call(incomingCallerPeerId.value, stream);
-
-    call.value.on("stream", (remoteStream) => {
-      console.log("✅ Received remote stream from caller");
-      if (remoteVideo.value) {
-        remoteVideo.value.srcObject = remoteStream;
-      }
-    });
-
-    if (incomingCallDocId.value) {
-      await deleteDoc(doc(db, "calls", incomingCallDocId.value));
-    }
-
-    incomingCall.value = false;
-    incomingCallerId.value = null;
-    incomingCallerPeerId.value = null;
-    incomingCallDocId.value = null;
-  } catch (err) {
-    console.error("🎥 Error accessing media devices", err);
-  }
-};
-
-// Reject call
-const rejectCall = async () => {
-  if (incomingCallDocId.value) {
-    await deleteDoc(doc(db, "calls", incomingCallDocId.value));
-  }
-  cleanup();
-};
-
-// End call
-const endCall = () => {
-  cleanup();
-};
-
-// Lifecycle hooks
+//     peerRef.value = targetUser.peerId;
+//     console.log(peerRef.value);
+//   } else {
+//     console.error("No matching user found to call");
+//   }
+// };
+scrollToLastMessage(chatContainerId);
+watch(currentChat, () => {
+  scrollToLastMessage(chatContainerId);
+});
+onBeforeMount(() => {
+  changeBackground();
+});
 onMounted(() => {
-  console.log("Logged in user ID:", userId);
-  initializePeer();
-  const unsubscribe = setupFirestoreListener();
+  console.log(random);
+  console.log(random.value);
 
-  onUnmounted(() => {
-    cleanup();
-    if (peer.value) {
-      peer.value.destroy();
-    }
-    unsubscribe();
-  });
+  setTimeout(() => {
+    scrollToLastMessage(chatContainerId);
+  }, 100);
 });
 </script>
-
 <template>
-  <div class="flex flex-col items-center justify-center">
-    <div class="video-call bg-gray-950 p-4 z-[50]">
-      <div class="text-white bg-black pb-2">Call to: {{ callTo }}</div>
-      <video ref="localVideo" autoplay playsinline></video>
-      <video ref="remoteVideo" autoplay playsinline></video>
+  <div
+    class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full z-50 h-[100%] fixed text-center bg-gray-300"
+  >
+    <img
+      class="w-full md:w-[calc(100vw-420px)] h-full fixed z-[-1]"
+      :src="`https://picsum.photos/id/${random}/200/300`"
+      alt=""
+    />
 
-      <div class="flex flex-col gap-2">
-        <button
-          @click="startCall"
-          class="bg-black py-1 px-2 rounded-md text-white"
-        >
-          Start Call
-        </button>
-        <button
-          @click="endCall"
-          class="bg-black py-1 px-2 rounded-md text-white"
-        >
-          End Call
-        </button>
+    <div class="w-full flex justify-between items-center bg-black px-4">
+      <div class="w-full h-full flex items-center gap-4 px-4 py-2">
+        <div>
+          <ArrowLeftIcon
+            fillColor="#ffffff"
+            :size="24"
+            @click="messageViewOpen = false"
+          />
+        </div>
+        <!-- <div class="text-white">{{ peerRef }}</div> -->
+        <img
+          :src="userDataForChat[0].picture"
+          class="w-12 h-12 rounded-full"
+          alt=""
+        />
+
+        <div class="text-white">{{ userDataForChat[0].name }}</div>
       </div>
+      <div @click="videoCallOpen = !videoCallOpen">
+        <VideoIcon
+          fillColor="#ffffff"
+          :size="24"
+          class="flex w-full h-full items-center justify-end cursor-pointer"
+        />
+      </div>
+      <div class="flex justify-center items-center">
+        <div class="">
+          <div class="flex items-center justify-end ml-6">
+            <DotsVerticalIcon
+              @click="changeThemeOpen = !changeThemeOpen"
+              fillColor="#ffffff"
+              :size="24"
+              class="flex w-full h-full items-center justify-end cursor-pointer"
+            />
+          </div>
 
-      <div v-if="incomingCall" class="incoming-call z-[50]">
-        <p>Incoming call from {{ incomingCallerId }}</p>
+          <div
+            :class="
+              changeThemeOpen
+                ? 'text-white fixed top-0 right-0 translate-y-[60px] duration-1000 px-4 py-4 bg-gray-950 flex flex-col rounded-md gap-3 '
+                : 'text-white fixed top-0 right-0 translate-y-[-100vh] duration-1000 px-4 py-1 bg-gray-950 flex flex-col rounded-md gap-3'
+            "
+          >
+            <button @click="changeBackground">Change the theme</button>
+            <button @click="changeBackground">Change the theme</button>
+            <button @click="changeBackground">Change the theme</button>
+            <button @click="changeBackground">Change the theme</button>
+            <button @click="changeBackground">Change the theme</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="videoCallOpen">
+      <!-- <div @click="callUserToParticipant(currentChat.participants[0].peerId)">
+        0
+      </div> -->
+      <div class="w-[300px] h-[300px] fixed top-[15%] left-[5vw] z-[-0]">
+        <div class="flex items-center justify-center">
+          <VideoCall :callTo="userDataForChat[0].id" />
+        </div>
+      </div>
+      <div>
+        {{}}
+        <!-- <button @click="callToUser(userDataForChat[0].id)">0000</button>
+        <h2>Available Users</h2>
+        <ul>
+          <li v-for="user in peerUsers" :key="user.id">
+            <button v-if="user.peerId" class="text-white bg-black py-1 px-2">
+              Call {{ user.displayName }}
+            </button>
+          </li>
+        </ul> -->
+
+        <!-- <div class="text-white">
+          {{ peerUsers }}
+        </div> -->
+
+        <video id="remoteVideo" autoplay></video>
+      </div>
+    </div>
+    <div
+      id="MessageSection"
+      class="w-full min-h-[calc(100vh-150px))] overflow-auto touch-auto h-[calc(100vh-200px)] justify-end items-start cursor-pointer"
+    >
+      <ScrollToBottomButton :container="chatContainerId" />
+
+      <div v-if="chats && chats.length > 0">
+        <!-- Loop through all chats -->
+        <div v-for="(chat, chatIndex) in currentChat" :key="chatIndex">
+          <!-- Check if messages exist in chat -->
+          <div v-if="chat">
+            <!-- Loop through messages in each chat -->
+
+            <div
+              v-for="(msg, msgIndex) in chat"
+              :key="msgIndex"
+              class="md:px-16 px-4 text-sm"
+            >
+              <div
+                v-if="msg.senderId !== user.localId"
+                class="w-[calc(80%-100px)] flex justify-start items-center gap-2"
+              >
+                <div
+                  v-if="msg.message"
+                  class="bg-white py-1 px-2 rounded-md my-2 break-all"
+                >
+                  <div class="text-[14px]">
+                    {{ msg.message }}
+                  </div>
+                  <div v-if="msg.createdAt" class="text-[11px]">
+                    {{
+                      moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
+                        "h:mm"
+                      )
+                    }}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-else
+                class="w-[calc(80%-100px)] flex justify-end items-center space-x-1 float-right mt-8"
+              >
+                <div
+                  class="bg-green-500 my-2 block text-gray-200 py-1 px-2 rounded-md break-all"
+                >
+                  <div class="inline-">
+                    {{ msg.message }}
+                  </div>
+                  <div class="text-[11px]">
+                    {{
+                      moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
+                        "h:mm"
+                      )
+                    }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else>
+            <p>No messages in this chat</p>
+          </div>
+        </div>
+      </div>
+      <div v-else>
+        <p>No chats available</p>
+      </div>
+    </div>
+
+    <div id="SendSection" class="fixed bottom-0 bg-black h-[60px] w-full">
+      <div class="h-full w-full flex items-center">
+        <div class="flex justify-between items-center gap-4 mx-6">
+          <Paperclip
+            fillColor="#FFFFFF"
+            :size="24"
+            class="flex items-center justify-center rotate-45"
+          />
+
+          <div class="w-[40px] h-full">
+            <button @click="showPicker = !showPicker">
+              <EmoticonExcitedOutlineIcon
+                fillColor="#FFFFFF"
+                :size="24"
+                class="flex items-center justify-center"
+              />
+            </button>
+
+            <div class="absolute bottom-[10vh] left-0">
+              <EmojiPicker v-if="showPicker" @select="addEmoji" />
+            </div>
+          </div>
+        </div>
+
+        <input
+          v-model="message"
+          @keyup.enter="sendMessage"
+          type="text"
+          placeholder="Search"
+          autocomplete="on"
+          class="focus:outline-none appearance-none focus:shadow-none placeholder:text-gray-900 placeholder:text-md bg-white w-[55%] py-1 rounded-full px-4 relative"
+        />
         <button
-          @click="acceptCall"
-          class="bg-green-500 py-1 px-2 rounded-md text-white"
+          @click="sendMessage"
+          class="p-4 flex items-center justify-center cursor-pointer"
         >
-          Accept
-        </button>
-        <button
-          @click="rejectCall"
-          class="bg-red-500 py-1 px-2 rounded-md text-white"
-        >
-          Reject
+          <SendIcon fillColor="#FFFFFF" :size="25" />
         </button>
       </div>
     </div>
   </div>
 </template>
+
 <style scoped>
-.video-call {
-  width: 100%;
-  max-width: 400px;
-  border-radius: 12px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-  text-align: center;
-}
-
-video {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-  background: black;
-  margin-bottom: 8px;
-}
-
-.incoming-call {
-  background: rgba(0, 0, 0, 0.8);
-  padding: 10px;
-  border-radius: 8px;
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-}
-
-button {
-  width: 100%;
-  padding: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-button:hover {
-  opacity: 0.8;
+.break-letters {
+  word-break: break-all;
 }
 </style>
