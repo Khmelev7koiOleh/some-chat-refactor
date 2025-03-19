@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watchEffect } from "vue";
 import { toRefs } from "vue";
 import Peer from "peerjs";
 import {
@@ -54,12 +54,16 @@ onMounted(() => {
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
-        localVideo.value.srcObject = stream;
+        if (localVideo.value) {
+          localVideo.value.srcObject = stream;
+        }
         incomingCallObj.answer(stream);
 
         incomingCallObj.on("stream", (remoteStream) => {
           console.log("✅ Received remote stream");
-          remoteVideo.value.srcObject = remoteStream;
+          if (remoteVideo.value) {
+            remoteVideo.value.srcObject = remoteStream;
+          }
         });
 
         call.value = incomingCallObj;
@@ -96,14 +100,18 @@ onMounted(() => {
         navigator.mediaDevices
           .getUserMedia({ video: true, audio: true })
           .then((stream) => {
-            localVideo.value.srcObject = stream;
+            if (localVideo.value) {
+              localVideo.value.srcObject = stream;
+            }
 
             // Manually answer the call
             const manualCall = peer.value.call(incomingPeerId.value, stream);
 
             manualCall.on("stream", (remoteStream) => {
               console.log("✅ Received remote stream from manual call");
-              remoteVideo.value.srcObject = remoteStream;
+              if (remoteVideo.value) {
+                remoteVideo.value.srcObject = remoteStream;
+              }
             });
 
             call.value = manualCall;
@@ -155,7 +163,9 @@ const acceptCall = () => {
   navigator.mediaDevices
     .getUserMedia({ video: true, audio: true })
     .then((stream) => {
-      localVideo.value.srcObject = stream;
+      if (localVideo.value) {
+        localVideo.value.srcObject = stream;
+      }
 
       // Answer the incoming call with our media stream
       call.value.answer(stream);
@@ -163,7 +173,9 @@ const acceptCall = () => {
       // Listen for the remote stream
       call.value.on("stream", (remoteStream) => {
         console.log("✅ Received remote stream from caller");
-        remoteVideo.value.srcObject = remoteStream;
+        if (remoteVideo.value) {
+          remoteVideo.value.srcObject = remoteStream;
+        }
       });
 
       incomingCall.value = false;
@@ -183,8 +195,12 @@ const endCall = () => {
   if (call.value) {
     call.value.close();
   }
-  localVideo.value.srcObject = null;
-  remoteVideo.value.srcObject = null;
+  if (localVideo.value) {
+    localVideo.value.srcObject = null;
+  }
+  if (remoteVideo.value) {
+    remoteVideo.value.srcObject = null;
+  }
 
   // Reset call object to allow new calls to be accepted
   call.value = null;
