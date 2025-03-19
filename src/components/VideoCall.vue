@@ -130,26 +130,6 @@ const setupFirestoreListener = () => {
   return unsubscribe;
 };
 
-// Get user media with better handling
-const getUserMedia = async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" }, // Ensures front camera on phones
-      audio: true,
-    });
-
-    if (localVideo.value) {
-      localVideo.value.srcObject = stream;
-    }
-
-    return stream;
-  } catch (err) {
-    console.error("🎥 Error accessing media devices", err);
-    alert("Please allow access to your camera and microphone.");
-    return null;
-  }
-};
-
 // Start Call (Caller)
 const startCall = async () => {
   if (!peer.value || !peerId.value) {
@@ -181,8 +161,14 @@ const acceptCall = async () => {
   }
 
   try {
-    const stream = await getUserMedia();
-    if (!stream) return;
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+
+    if (localVideo.value) {
+      localVideo.value.srcObject = stream;
+    }
 
     call.value = peer.value.call(incomingCallerPeerId.value, stream);
 
@@ -203,6 +189,7 @@ const acceptCall = async () => {
     incomingCallDocId.value = null;
   } catch (err) {
     console.error("🎥 Error accessing media devices", err);
+    alert("Please allow access to your camera and microphone.");
   }
 };
 
@@ -237,8 +224,10 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col items-center justify-center">
+    <!-- <div class="text-white z-[50] bg-black">My peerId: {{ peerId }}</div> -->
+
     <div class="video-call bg-gray-950 p-4 z-[50]">
-      <div class="text-white bg-black pb-2">Call to: {{ callTo }}</div>
+      <div class="text-white bg-black p">Call to: {{ callTo }}</div>
       <video ref="localVideo" autoplay playsinline></video>
       <video ref="remoteVideo" autoplay playsinline></video>
 
@@ -257,6 +246,7 @@ onMounted(() => {
         </button>
       </div>
 
+      <!-- Incoming Call Notification -->
       <div v-if="incomingCall" class="incoming-call z-[50]">
         <p>Incoming call from {{ incomingCallerId }}</p>
         <button
@@ -275,3 +265,27 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.video-call {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+video {
+  width: 200px;
+  height: 150px;
+  margin-bottom: 10px;
+  border: 1px solid #ffff;
+}
+.incoming-call {
+  background: rgba(114, 17, 162, 0.8);
+  z-index: 50;
+  color: white;
+  padding: 10px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  border-radius: 5px;
+}
+</style>
