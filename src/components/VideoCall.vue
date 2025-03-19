@@ -16,14 +16,14 @@ import { getAuth } from "firebase/auth";
 
 // PROPS
 const props = defineProps({
-  callTo: { type: String, required: true },
+  callTo: { type: String, required: true }, // ID of the user to call
 });
 const { callTo } = toRefs(props);
 
 // Firebase setup
 const db = getFirestore();
 const auth = getAuth();
-const userId = auth.currentUser?.uid || "unknown_user";
+const userId = auth.currentUser?.uid || "unknown_user"; // Get logged-in user ID
 
 // Refs
 const localVideo = ref(null);
@@ -33,10 +33,10 @@ const call = ref(null);
 const peerId = ref(null);
 const incomingCall = ref(false);
 const incomingCallerId = ref(null);
-const incomingCallerPeerId = ref(null);
-const incomingCallDocId = ref(null);
+const incomingCallerPeerId = ref(null); // Peer ID of the caller
+const incomingCallDocId = ref(null); // Firestore document ID for the call request
 
-// Cleanup function
+// Cleanup function to close streams and connections
 const cleanup = () => {
   if (call.value) {
     call.value.close();
@@ -56,20 +56,9 @@ const cleanup = () => {
   incomingCallDocId.value = null;
 };
 
-// Initialize PeerJS with TURN server
+// Initialize PeerJS
 const initializePeer = () => {
-  peer.value = new Peer({
-    config: {
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" }, // Free STUN server
-        {
-          urls: "turn:your-turn-server.com",
-          username: "your-username",
-          credential: "your-credential",
-        }, // TURN server
-      ],
-    },
-  });
+  peer.value = new Peer();
 
   peer.value.on("open", (id) => {
     console.log("My Peer ID:", id);
@@ -79,6 +68,7 @@ const initializePeer = () => {
   peer.value.on("call", (incomingCall) => {
     console.log("🚀 Incoming PeerJS call received!", incomingCall);
 
+    // Answer the call automatically (no need for callee to click "Accept" again)
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
@@ -86,8 +76,10 @@ const initializePeer = () => {
           localVideo.value.srcObject = stream;
         }
 
+        // Answer the call with the local stream
         incomingCall.answer(stream);
 
+        // Listen for the remote stream
         incomingCall.on("stream", (remoteStream) => {
           console.log("✅ Received remote stream from caller");
           if (remoteVideo.value) {
@@ -97,13 +89,13 @@ const initializePeer = () => {
       })
       .catch((err) => {
         console.error("🎥 Error accessing media devices", err);
-        alert("Please allow access to your camera and microphone.");
       });
   });
 
   peer.value.on("error", (err) => {
     console.error("PeerJS Error:", err);
-    initializePeer(); // Reinitialize on error
+    // Reinitialize PeerJS on error
+    initializePeer();
   });
 };
 
@@ -123,7 +115,7 @@ const setupFirestoreListener = () => {
       incomingCall.value = true;
       incomingCallerId.value = data.sender;
       incomingCallerPeerId.value = data.callerPeerId;
-      incomingCallDocId.value = doc.id;
+      incomingCallDocId.value = doc.id; // Store the Firestore document ID
     });
   });
 
@@ -139,12 +131,13 @@ const startCall = async () => {
 
   console.log("Sending call request to:", callTo.value);
 
+  // Send a Firestore message with the call request
   try {
     await addDoc(collection(db, "calls"), {
       sender: userId,
       receiver: callTo.value,
-      callerPeerId: peerId.value,
-      status: "pending",
+      callerPeerId: peerId.value, // Send the caller's peerId
+      status: "pending", // Call status
       timestamp: new Date(),
     });
     console.log("Call request sent!");
@@ -170,8 +163,10 @@ const acceptCall = async () => {
       localVideo.value.srcObject = stream;
     }
 
+    // Call the caller using their peerId
     call.value = peer.value.call(incomingCallerPeerId.value, stream);
 
+    // Listen for the remote stream
     call.value.on("stream", (remoteStream) => {
       console.log("✅ Received remote stream from caller");
       if (remoteVideo.value) {
@@ -179,6 +174,7 @@ const acceptCall = async () => {
       }
     });
 
+    // Update the call status in Firestore to "accepted"
     if (incomingCallDocId.value) {
       await deleteDoc(doc(db, "calls", incomingCallDocId.value));
     }
@@ -189,7 +185,6 @@ const acceptCall = async () => {
     incomingCallDocId.value = null;
   } catch (err) {
     console.error("🎥 Error accessing media devices", err);
-    alert("Please allow access to your camera and microphone.");
   }
 };
 
@@ -212,6 +207,7 @@ onMounted(() => {
   initializePeer();
   const unsubscribe = setupFirestoreListener();
 
+  // Cleanup on unmount
   onUnmounted(() => {
     cleanup();
     if (peer.value) {
