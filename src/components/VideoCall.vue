@@ -273,13 +273,14 @@ onMounted(() => {
   align-items: center;
 }
 video {
-  width: 300px;
-  height: 200px;
+  width: 200px;
+  height: 150px;
   margin-bottom: 10px;
   border: 1px solid #ffff;
 }
 .incoming-call {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(114, 17, 162, 0.8);
+  z-index: 50;
   color: white;
   padding: 10px;
   position: absolute;
