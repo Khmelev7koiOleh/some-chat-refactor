@@ -27,6 +27,13 @@ import ScrollToBottomButton from "../components/ScrollToBottomButton.vue";
 import { useChangeBackground } from "../composables/changeBackground";
 import EmojiPicker from "vue3-emoji-picker";
 import "vue3-emoji-picker/css";
+import { useAuthStoreC } from "../store/use-auth.js";
+import { useFirestore } from "../store/fireStore";
+const fireStore = useFirestore();
+
+const { commonChat: commonChatF, currentChatId } = storeToRefs(fireStore);
+const authStoreC = useAuthStoreC();
+const { user, logoutPopUpOpen, login } = storeToRefs(authStoreC);
 const { changeBackground, random } = useChangeBackground();
 const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
@@ -36,13 +43,15 @@ const { videoCallOpen } = storeToRefs(videoCall);
 const authStore = useAuthStore();
 const {
   userDataForChat,
-  user,
-  currentChatId,
-  currentChat,
+  user: userAuth,
+  currentChatId: currentChatIdAuth,
+  currentChat: currentChatAuth,
   showFindFriends,
   peerUsers,
   chats,
 } = storeToRefs(authStore);
+const { currentChat } = storeToRefs(fireStore);
+
 const chatContainerId = "MessageSection";
 
 const { scrollToLastMessage } = useScrollTo();
@@ -68,7 +77,7 @@ const sendMessage = async () => {
     return;
   }
 
-  await authStore.sendMessage({
+  await fireStore.sendMessage({
     message: message.value,
     chatId: currentChatId.value, // Now safely accessed
   });
@@ -86,7 +95,7 @@ const sendMessage = async () => {
 
 //   // If targetUser is found, initiate the call
 //   if (targetUser) {
-//     authStore.callUser(targetUser.peerId); // Assuming callUser is in your store and accepts peerId
+//     fireStore.callUser(targetUser.peerId); // Assuming callUser is in your store and accepts peerId
 
 //     peerRef.value = targetUser.peerId;
 //     console.log(peerRef.value);
