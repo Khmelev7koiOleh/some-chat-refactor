@@ -12,6 +12,14 @@ import { useMessageViewStore } from "../store/messageView-store";
 import { useCommonChatStore } from "../store/common-chat-store";
 import { useScrollTo } from "../composables/scrollTo";
 import { useChangeBackground } from "../composables/changeBackground";
+
+import { useAuthStoreC } from "../store/use-auth.js";
+import { useFirestore } from "../store/fireStore";
+const fireStore = useFirestore();
+
+const { commonChat: commonChatF } = storeToRefs(fireStore);
+const authStoreC = useAuthStoreC();
+const { user, logoutPopUpOpen, login } = storeToRefs(authStoreC);
 const { changeBackground, random } = useChangeBackground();
 const commonChatStore = useCommonChatStore();
 const messageViewStore = useMessageViewStore();
@@ -32,26 +40,26 @@ const createNewChat = (user) => {
   console.log("Creating new chat with user:", userDataForChat.value);
 };
 const hideMyChat = (data) => {
-  if (data === authStore.user.localId) {
+  if (data === user.value.localId) {
     return false;
   } else {
     return true;
   }
 };
-const openChat = async (user) => {
+const openChat = async (q) => {
   changeBackground();
-  console.log("Opening chat:", thisUser.value.localId);
+  console.log("Opening chat:", user.value.localId);
   scrollToLastMessage();
   userDataForChat.value = [
     {
-      id: user.uid,
-      name: user.displayName,
-      picture: user.photoURL,
+      id: q.uid,
+      name: q.displayName,
+      picture: q.photoURL,
     },
   ];
 
   try {
-    await authStore.getChatById(user.uid, thisUser.value.localId); // Use `authStore.getChatById`
+    await fireStore.getChatById(q.uid, user.value.localId); // Use `authStore.getChatById`
   } catch (error) {
     console.error("Error fetching chat:", error);
   }
@@ -64,6 +72,7 @@ const openChat = async (user) => {
 };
 </script>
 <template>
+  <div class="text-red-300">{{ user.localId }}.</div>
   <div v-for="user in authStore.allUsers" :key="user">
     <div @click="openChat(user)">
       <div

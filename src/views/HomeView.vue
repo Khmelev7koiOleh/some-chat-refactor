@@ -17,6 +17,10 @@ import { useCommonChatStore } from "../store/common-chat-store";
 import { useAuthStoreC } from "../store/use-auth.js";
 const authStoreC = useAuthStoreC();
 const { user: userC, logoutPopUpOpen, login } = storeToRefs(authStoreC);
+import { useFirestore } from "../store/fireStore";
+const fireStore = useFirestore();
+
+const { commonChat: commonChatF } = storeToRefs(fireStore);
 const commonChatStore = useCommonChatStore();
 const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);

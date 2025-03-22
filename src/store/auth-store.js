@@ -325,8 +325,9 @@ export const useAuthStore = defineStore(
     return {
       user,
       login,
-      fetchPeerIDs,
       logout,
+      fetchPeerIDs,
+
       getAllUsers,
       allUsers,
       userDataForChat,
