@@ -14,6 +14,9 @@ import { useMessageViewStore } from "../store/messageView-store";
 import CommonMessageView from "../components/CommonMessageView.vue";
 import DefaultView from "../components/DefaultView.vue";
 import { useCommonChatStore } from "../store/common-chat-store";
+import { useAuthStoreC } from "../store/use-auth.js";
+const authStoreC = useAuthStoreC();
+const { user: userC, logoutPopUpOpen, login } = storeToRefs(authStoreC);
 const commonChatStore = useCommonChatStore();
 const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
@@ -34,8 +37,8 @@ onMounted(async () => {
   }
 });
 const combinedFunc = async () => {
-  authStore.logout();
-  authStore.logoutPopUpOpen = !authStore.logoutPopUpOpen;
+  authStoreC.logout();
+  logoutPopUpOpen.value = logoutPopUpOpen.value;
 };
 </script>
 <template>
@@ -44,7 +47,7 @@ const combinedFunc = async () => {
       @click="combinedFunc()"
       class="text-white cursor-pointer absolute top-0 md:bottom-0 right-0 md:right-0 bg-gray-900 w-[100%] h-[70px] md:h-[70px] flex justify-center items-center gap-2"
       :class="
-        authStore.logoutPopUpOpen
+        logoutPopUpOpen
           ? ' -translate-y-0 transition-all duration-1000'
           : '-translate-y-[100%] transition-all duration-1000'
       "
@@ -54,24 +57,20 @@ const combinedFunc = async () => {
     </div>
     <div class="mx-4 my-4 flex items-center gap-4">
       <div>
-        <img
-          :src="authStore.user.photoUrl"
-          alt=""
-          class="w-12 h-12 rounded-full"
-        />
+        <img :src="userC.photoUrl" alt="" class="w-12 h-12 rounded-full" />
       </div>
 
       <div class="text-white font-light text-md">
-        {{ authStore.user.email }}
+        {{ userC.email }}
       </div>
     </div>
     <div id="Header" class="flex justify-between items-center px-4 py-2 pt-10">
-      <div class="text-xl text-gray-200 font-medium">Chats</div>
+      <div class="text-xl text-gray-200 font-medium">Chats one</div>
 
       <div class="flex justify-between items-center gap-4 relative">
         <AccountGroupIcon fillColor="#FFFFFF" :size="25" />
         <DotsVerticalIcon
-          @click="authStore.logoutPopUpOpen = !authStore.logoutPopUpOpen"
+          @click="logoutPopUpOpen = !logoutPopUpOpen"
           fillColor="#FFFFFF"
           :size="25"
           class="cursor-pointer"

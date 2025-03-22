@@ -1,9 +1,12 @@
 <script setup>
 import { useAuthStore } from "../store/auth-store";
-
+import { storeToRefs } from "pinia";
 const authStore = useAuthStore();
 
 import { ref } from "vue";
+import { useAuthStoreC } from "../store/use-auth.js";
+const authStoreC = useAuthStoreC();
+const { logoutPopUpOpen, loginCo } = storeToRefs(useAuthStoreC);
 </script>
 <template>
   <div
@@ -17,7 +20,7 @@ import { ref } from "vue";
         <div class="text-white text-3-xl mb-8">Login</div>
 
         <button
-          @click="authStore.login"
+          @click="authStoreC.loginCo"
           class="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer"
         >
           Sign in with Google
