@@ -196,7 +196,7 @@ onMounted(() => {
         <video id="remoteVideo" autoplay></video>
       </div>
     </div>
-    <div class="text-green-800 text-center text-sm">{{ currentChat }}</div>
+    <!-- <div class="text-green-800 text-center text-sm">{{ currentChat }}</div> -->
     <div
       id="MessageSection"
       class="w-full min-h-[calc(100vh-150px))] overflow-auto touch-auto h-[calc(100vh-200px)] justify-end items-start cursor-pointer"
@@ -206,59 +206,56 @@ onMounted(() => {
       <div v-if="chats && chats.length > 0">
         <!-- Loop through all chats -->
         <div v-for="(chat, chatIndex) in currentChat" :key="chatIndex">
-          <!-- Check if messages exist in chat -->
-          <div v-if="chat">
+          <div v-if="chat.length">
             <!-- Loop through messages in each chat -->
-            {{ chat }}chat
             <div
               v-for="(msg, msgIndex) in chat"
               :key="msgIndex"
               class="md:px-16 px-4 text-sm"
             >
-              {{ msg }} msg
+              <!-- Incoming Message -->
               <div
                 v-if="msg.senderId !== user.localId"
-                class="w-[calc(80%-100px)] flex justify-start items-center gap-2"
+                class="max-w-[80%] flex justify-start items-center gap-2"
               >
                 <div
                   v-if="msg.message"
-                  class="bg-white py-1 px-2 rounded-md my-2 break-all"
+                  class="bg-white py-1 px-2 rounded-md my-2 break-words"
                 >
-                  <div class="text-[14px]">
-                    {{ msg.message }}
-                  </div>
-                  <div v-if="msg.createdAt" class="text-[11px]">
+                  <p class="text-[14px]">{{ msg.message }}</p>
+                  <p v-if="msg.createdAt" class="text-[11px] text-gray-500">
                     {{
                       moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
                         "h:mm"
                       )
                     }}
-                  </div>
+                  </p>
                 </div>
               </div>
 
+              <!-- Outgoing Message -->
               <div
                 v-else
-                class="w-[calc(80%-100px)] flex justify-end items-center space-x-1 float-right mt-8"
+                class="max-w-[80%] flex justify-end items-center mt-2"
               >
                 <div
-                  class="bg-green-500 my-2 block text-gray-200 py-1 px-2 rounded-md break-all"
+                  class="bg-green-500 text-gray-200 py-1 px-2 rounded-md my-2 break-words"
                 >
-                  <div class="inline-">
-                    {{ msg.message }}
-                  </div>
-                  <div class="text-[11px]">
+                  <p class="text-[14px]">{{ msg.message }}</p>
+                  <p v-if="msg.createdAt" class="text-[11px] text-gray-300">
                     {{
                       moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
                         "h:mm"
                       )
                     }}
-                  </div>
+                  </p>
                 </div>
               </div>
             </div>
           </div>
-          <div v-else>
+
+          <!-- No Messages -->
+          <div v-else class="text-center text-gray-500 py-4">
             <p>No messages in this chat</p>
           </div>
         </div>
