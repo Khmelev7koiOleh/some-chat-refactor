@@ -85,7 +85,7 @@ const combinedFunc = async () => {
       </div>
     </div>
     <div id="Header" class="flex justify-between items-center px-4 py-2 pt-10">
-      <div class="text-xl text-gray-200 font-medium">Chats</div>
+      <div class="text-xl text-gray-200 font-medium">Chats dev</div>
 
       <div class="flex justify-between items-center gap-4 relative">
         <AccountGroupIcon fillColor="#FFFFFF" :size="25" />
