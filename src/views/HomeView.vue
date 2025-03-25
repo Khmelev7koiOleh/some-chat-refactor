@@ -58,6 +58,24 @@ const combinedFunc = async () => {
 };
 </script>
 <template>
+  <div
+    v-if="incomingCall"
+    class="incoming-call z-[60] w-auto px-4 py-3 bg-gray-900 text-white rounded-lg shadow-lg absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+  >
+    <p>Incoming call from {{ incomingCallerId }}</p>
+    <button
+      @click="acceptCall"
+      class="bg-green-500 py-1 px-2 rounded-md text-white"
+    >
+      Accept
+    </button>
+    <button
+      @click="rejectCall"
+      class="bg-red-500 py-1 px-2 rounded-md text-white"
+    >
+      Reject
+    </button>
+  </div>
   <div class="fixed w-full md:w-[420px] z-40 bg-black h-[100vh]">
     <div
       @click="combinedFunc()"

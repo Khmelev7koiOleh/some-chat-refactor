@@ -196,7 +196,7 @@ onMounted(() => {
         <video id="remoteVideo" autoplay></video>
       </div>
     </div>
-    <div class="text-green-800 text-center text-sm">{{}}</div>
+    <div class="text-green-800 text-center text-sm">{{ chats }}</div>
     <div
       id="MessageSection"
       class="w-full min-h-[calc(100vh-150px))] overflow-auto touch-auto h-[calc(100vh-200px)] justify-end items-start cursor-pointer"
