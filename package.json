@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.5",
+    "@vueuse/core": "^13.0.0",
     "agora-rtc-sdk": "^3.6.11",
     "firebase": "^11.3.0",
     "moment": "^2.30.1",

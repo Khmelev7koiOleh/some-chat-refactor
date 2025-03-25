@@ -54,8 +54,6 @@ const { chat } = toRefs(props);
 // const message = ref("");
 const showPicker = ref(false);
 
-const authStore = useAuthStore();
-
 const messageViewStore = useMessageViewStore();
 const commonChatStore = useCommonChatStore();
 const chatContainerId = "MessageSection";
@@ -66,6 +64,7 @@ let changeThemeOpen = ref(false);
 const getChatsSize = document.getElementById("MessageSection");
 const sendToCommonChat = async () => {
   addToCollection("chat", message);
+  showPicker.value = false;
 };
 
 const addEmoji = (emoji) => {
@@ -116,7 +115,7 @@ onMounted(() => {
                 class="w-12 h-12 rounded-full mr-0"
               />
             </div>
-            <div class="text-white">Common chat</div>
+            <div class="text-white">General chat</div>
           </div>
 
           <div class="flex justify-center items-center">
