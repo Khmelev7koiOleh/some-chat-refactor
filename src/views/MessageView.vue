@@ -204,7 +204,7 @@ onMounted(() => {
     >
       <ScrollToBottomButton :container="chatContainerId" />
 
-      <div v-if="chats && chats.length > 0">
+      <div>
         <!-- Loop through all chats -->
         <div v-for="(chat, chatIndex) in currentChat" :key="chatIndex">
           {{ chat }}chat
@@ -265,9 +265,9 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      <div v-else>
+      <!-- <div v-else>
         <p>No chats available</p>
-      </div>
+      </div> -->
     </div>
 
     <div
