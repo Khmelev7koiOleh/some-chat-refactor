@@ -251,7 +251,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center">
+  <div class="flex flex-col items-center justify-center z-50">
     {{}}
     <!-- <div class="text-white z-[50] bg-black">My peerId: {{ peerId }}</div>
     <div class="text-white z-[50] bg-black">callTo: {{ callTo }}</div> -->
@@ -260,7 +260,7 @@ onMounted(() => {
         :class="
           expand
             ? 'video-call w-[100vw] h-[100vh] bg-gray-950 py-5 flex flex-col fixed justify-center items-center'
-            : 'video-call min-w-[300px] h-auto px-10 bg-gray-950 py-5 flex flex-col absolute justify-center items-center '
+            : 'video-call w-[300px] h-auto px-10 bg-gray-950 py-5 flex flex-col absolute justify-center items-center '
         "
         :style="
           expand
@@ -290,7 +290,7 @@ onMounted(() => {
           :class="
             expand
               ? 'transition-all w-[70vw] h-[40vh] mb-[10px] border border-white'
-              : 'transition-all w-[20vw] h-[15vh] mb-[10px] border border-white'
+              : 'transition-all w-[300px] h-[15vh] mb-[10px] border border-white'
           "
           ref="localVideo"
           autoplay
@@ -300,7 +300,7 @@ onMounted(() => {
           :class="
             expand
               ? 'transition-all w-[70vw] h-[40vh] mb-[10px] border border-white'
-              : 'transition-all w-[20vw] h-[15vh] mb-[10px] border border-white'
+              : 'transition-all w-[300px] h-[15vh] mb-[10px] border border-white'
           "
           ref="remoteVideo"
           autoplay
@@ -350,13 +350,7 @@ onMounted(() => {
   cursor: grab;
   user-select: none;
 }
-/* video {
-  transition: all 0.3s ease-in-out;
-  width: auto;
-  height: auto;
-  margin-bottom: 10px;
-  border: 1px solid #ffff;
-} */
+
 .incoming-call {
   background: rgba(0, 0, 0, 0.8);
   color: white;
