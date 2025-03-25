@@ -196,7 +196,7 @@ onMounted(() => {
         <video id="remoteVideo" autoplay></video>
       </div>
     </div>
-    <div class="text-green-800 text-center text-sm">check1</div>
+    <!-- <div class="text-green-800 text-center text-sm">check1</div> -->
 
     <div
       id="MessageSection"
@@ -207,17 +207,15 @@ onMounted(() => {
       <div>
         <!-- Loop through all chats -->
         <div v-for="(chat, chatIndex) in currentChat" :key="chatIndex">
-          {{ chat }}chat
           <!-- Check if messages exist in chat -->
           <div v-if="chat">
             <!-- Loop through messages in each chat -->
-            {{ chat }}chat
+
             <div
               v-for="(msg, msgIndex) in chat"
               :key="msgIndex"
               class="md:px-16 px-4 text-sm"
             >
-              {{ msg }} msg
               <div
                 v-if="msg.senderId !== user.localId"
                 class="w-[calc(80%-100px)] flex justify-start items-center gap-2"
