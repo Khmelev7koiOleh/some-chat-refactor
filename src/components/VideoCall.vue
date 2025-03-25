@@ -302,7 +302,7 @@ onMounted(() => {
           @click="expand = !expand"
           :class="
             expand
-              ? 'absolute top-6 left-6 z-50 cursor-pointer '
+              ? 'absolute top-10 left-6 z-50 cursor-pointer '
               : 'absolute top-2 left-2 z-50 cursor-pointer'
           "
         >
