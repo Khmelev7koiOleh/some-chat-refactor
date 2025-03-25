@@ -207,6 +207,7 @@ onMounted(() => {
       <div v-if="chats && chats.length > 0">
         <!-- Loop through all chats -->
         <div v-for="(chat, chatIndex) in currentChat" :key="chatIndex">
+          {{ chat }}chat
           <!-- Check if messages exist in chat -->
           <div v-if="chat">
             <!-- Loop through messages in each chat -->
