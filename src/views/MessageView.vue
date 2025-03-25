@@ -168,7 +168,35 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="text-green-800 text-center text-sm">{{ chats }}</div>
+    <div v-if="videoCallOpen">
+      <!-- <div @click="callUserToParticipant(currentChat.participants[0].peerId)">
+        0
+      </div> -->
+      <div class="w-[300px] h-[300px] fixed top-[15%] left-[5vw] z-[-0]">
+        <div class="flex items-center justify-center">
+          <VideoCall :callTo="userDataForChat[0].id" />
+        </div>
+      </div>
+      <div>
+        {{}}
+        <!-- <button @click="callToUser(userDataForChat[0].id)">0000</button>
+        <h2>Available Users</h2>
+        <ul>
+          <li v-for="user in peerUsers" :key="user.id">
+            <button v-if="user.peerId" class="text-white bg-black py-1 px-2">
+              Call {{ user.displayName }}
+            </button>
+          </li>
+        </ul> -->
+
+        <!-- <div class="text-white">
+          {{ peerUsers }}
+        </div> -->
+
+        <video id="remoteVideo" autoplay></video>
+      </div>
+    </div>
+    <div class="text-green-800 text-center text-sm">{{ currentChat }}</div>
     <div
       id="MessageSection"
       class="w-full min-h-[calc(100vh-150px))] overflow-auto touch-auto h-[calc(100vh-200px)] justify-end items-start cursor-pointer"
