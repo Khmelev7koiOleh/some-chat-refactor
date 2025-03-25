@@ -68,6 +68,9 @@ export const useAuthStore = defineStore(
       };
     };
 
+    onMounted(() => {
+      console.log(userDataForChat);
+    });
     // ✅ Login function with user existence check
     const login = async () => {
       try {
@@ -165,7 +168,7 @@ export const useAuthStore = defineStore(
               },
             ],
           });
-
+          console.log(newChatId);
           // Update UI with the new chat ID
           userDataForChat[0].id = newChatId;
           showFindFriends.value = false;

@@ -4,7 +4,7 @@ import LogoutIcon from "vue-material-design-icons/Logout.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import ChatsView from "./ChatsView.vue";
-import CommonChat from "./CommonChat.vue";
+import CommonChat from "../components/CommonChat.vue";
 import MessageView from "./MessageView.vue";
 import FindFriendsView from "./FindFriendsView.vue";
 import { storeToRefs } from "pinia";
@@ -20,22 +20,38 @@ const { user: userC, logoutPopUpOpen, login } = storeToRefs(authStoreC);
 import { useFirestore } from "../store/fireStore";
 const fireStore = useFirestore();
 
-const { commonChat: commonChatF } = storeToRefs(fireStore);
+const {
+  // userDataForChat,
+
+  showFindFriends,
+  commonChat,
+  currentChat,
+} = storeToRefs(fireStore);
 const commonChatStore = useCommonChatStore();
 const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
 
 const authStore = useAuthStore();
-const { userDataForChat, user, showFindFriends, commonChat, currentChat } =
-  storeToRefs(authStore);
+// const {
+//   userDataForChat,
+//   user,
+//   showFindFriends,
+//   commonChat: commonChatA,
+//   currentChat,
+// } = storeToRefs(authStore);
+
+const { userDataForChat } = storeToRefs(authStore);
 
 onMounted(async () => {
   try {
-    authStore.fetchPeerIDs();
-    authStore.getAllUsers();
-
-    authStore.getAllChatsByUser();
-    authStore.getCommonChatsByUser();
+    fireStore.fetchPeerIDs();
+    fireStore.getAllUsers();
+    // fireStore.getChatById();
+    fireStore.getAllChatsByUser();
+    fireStore.getCommonChatsByUser();
+    console.log(currentChat);
+    console.log(commonChat);
+    console.log(userDataForChat.value);
   } catch (error) {
     console.log(error);
   }
@@ -46,7 +62,7 @@ const combinedFunc = async () => {
 };
 </script>
 <template>
-  <div class="fixed w-full md:w-[420px] z-40 bg-gray-900 h-[100vh]">
+  <div class="fixed w-full md:w-[420px] z-40 bg-black h-[100vh]">
     <div
       @click="combinedFunc()"
       class="text-white cursor-pointer absolute top-0 md:bottom-0 right-0 md:right-0 bg-gray-900 w-[100%] h-[70px] md:h-[70px] flex justify-center items-center gap-2"
@@ -69,7 +85,7 @@ const combinedFunc = async () => {
       </div>
     </div>
     <div id="Header" class="flex justify-between items-center px-4 py-2 pt-10">
-      <div class="text-xl text-gray-200 font-medium">Chats dev</div>
+      <div class="text-xl text-gray-200 font-medium">Chats</div>
 
       <div class="flex justify-between items-center gap-4 relative">
         <AccountGroupIcon fillColor="#FFFFFF" :size="25" />

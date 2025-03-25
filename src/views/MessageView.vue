@@ -31,7 +31,11 @@ import { useAuthStoreC } from "../store/use-auth.js";
 import { useFirestore } from "../store/fireStore";
 const fireStore = useFirestore();
 
-const { commonChat: commonChatF, currentChatId } = storeToRefs(fireStore);
+const {
+  commonChat: commonChatF,
+  currentChatId,
+  userDataForChat,
+} = storeToRefs(fireStore);
 const authStoreC = useAuthStoreC();
 const { user, logoutPopUpOpen, login } = storeToRefs(authStoreC);
 const { changeBackground, random } = useChangeBackground();
@@ -42,7 +46,7 @@ const videoCall = useVideoCallOpen();
 const { videoCallOpen } = storeToRefs(videoCall);
 const authStore = useAuthStore();
 const {
-  userDataForChat,
+  // userDataForChat,
   user: userAuth,
   currentChatId: currentChatIdAuth,
   currentChat: currentChatAuth,
@@ -79,10 +83,9 @@ const sendMessage = async () => {
 
   await fireStore.sendMessage({
     message: message.value,
-    chatId: currentChatId.value, // Now safely accessed
+    chatId: currentChatId.value,
   });
-
-  message.value = ""; // Clear input after sending
+  message.value = "";
 };
 
 // const callToUser = (id) => {
@@ -209,6 +212,9 @@ onMounted(() => {
 
         <video id="remoteVideo" autoplay></video>
       </div>
+    </div>
+    <div class="text-green-800 text-center text-sm">
+      {{}}
     </div>
     <div
       id="MessageSection"

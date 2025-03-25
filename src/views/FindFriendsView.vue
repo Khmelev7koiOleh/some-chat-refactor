@@ -72,13 +72,12 @@ const openChat = async (q) => {
 };
 </script>
 <template>
-  <div class="text-red-300">{{ user.localId }}.</div>
   <div v-for="user in authStore.allUsers" :key="user">
     <div @click="openChat(user)">
       <div
         v-if="hideMyChat(user.uid)"
         @click="createNewChat(user)"
-        class="w-full bg-gray-900 flex items-center overflow-auto rounded-lg m-1 px-4 py-3 cursor-pointer hover:bg-gray-800"
+        class="w-full bg-transparent flex items-center overflow-auto rounded-lg m-1 px-4 py-3 cursor-pointer hover:bg-gray-800"
       >
         <div>
           <img
