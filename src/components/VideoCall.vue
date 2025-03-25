@@ -218,20 +218,44 @@ const dragging = ref(false);
 
 const startDrag = (event) => {
   dragging.value = true;
-  document.addEventListener("mousemove", drag);
-  document.addEventListener("mouseup", stopDrag);
+
+  if (event.type === "touchstart") {
+    document.addEventListener("touchmove", drag, { passive: false });
+    document.addEventListener("touchend", stopDrag);
+  } else {
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("mouseup", stopDrag);
+  }
 };
 
 const drag = (event) => {
   if (!dragging.value) return;
-  position.value.x = event.clientX - 150; // Adjust for center
-  position.value.y = event.clientY - 100;
+
+  let clientX, clientY;
+
+  if (event.type === "touchmove") {
+    event.preventDefault(); // Prevents unwanted scrolling
+    clientX = event.touches[0].clientX;
+    clientY = event.touches[0].clientY;
+  } else {
+    clientX = event.clientX;
+    clientY = event.clientY;
+  }
+
+  position.value.x = clientX - 150; // Adjust for center
+  position.value.y = clientY - 100;
 };
 
-const stopDrag = () => {
+const stopDrag = (event) => {
   dragging.value = false;
-  document.removeEventListener("mousemove", drag);
-  document.removeEventListener("mouseup", stopDrag);
+
+  if (event.type === "touchend") {
+    document.removeEventListener("touchmove", drag);
+    document.removeEventListener("touchend", stopDrag);
+  } else {
+    document.removeEventListener("mousemove", drag);
+    document.removeEventListener("mouseup", stopDrag);
+  }
 };
 // Lifecycle hooks
 onMounted(() => {
@@ -349,7 +373,6 @@ onMounted(() => {
 .video-call {
   cursor: grab;
   user-select: none;
-  pointer-events: none;
 }
 
 .incoming-call {
