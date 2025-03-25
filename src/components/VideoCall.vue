@@ -13,17 +13,27 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import Close from "vue-material-design-icons/Close.vue";
+import ArrowExpandIcon from "vue-material-design-icons/ArrowExpand.vue";
+import ArrowCollapseIcon from "vue-material-design-icons/ArrowCollapse.vue";
 
+import { storeToRefs } from "pinia";
+import { useVideoCallOpen } from "../store/video-call-store";
+
+const videoCall = useVideoCallOpen();
+const { expand } = storeToRefs(videoCall);
 // PROPS
 const props = defineProps({
   callTo: { type: String, required: true }, // ID of the user to call
 });
 const { callTo } = toRefs(props);
 
+// let expand = ref(false);
 // Firebase setup
 const db = getFirestore();
 const auth = getAuth();
 const userId = auth.currentUser?.uid || "unknown_user"; // Get logged-in user ID
+const userName = auth.currentUser?.displayName;
 
 // Refs
 const localVideo = ref(null);
@@ -113,7 +123,8 @@ const setupFirestoreListener = () => {
       console.log("📞 New call request received:", data);
 
       incomingCall.value = true;
-      incomingCallerId.value = data.sender;
+      incomingCallerId.value = data.senderName;
+
       incomingCallerPeerId.value = data.callerPeerId;
       incomingCallDocId.value = doc.id; // Store the Firestore document ID
     });
@@ -135,6 +146,7 @@ const startCall = async () => {
   try {
     await addDoc(collection(db, "calls"), {
       sender: userId,
+      senderName: userName,
       receiver: callTo.value,
       callerPeerId: peerId.value, // Send the caller's peerId
       status: "pending", // Call status
@@ -200,7 +212,26 @@ const rejectCall = async () => {
 const endCall = () => {
   cleanup();
 };
+const position = ref({ x: 100, y: 100 });
+const dragging = ref(false);
 
+const startDrag = (event) => {
+  dragging.value = true;
+  document.addEventListener("mousemove", drag);
+  document.addEventListener("mouseup", stopDrag);
+};
+
+const drag = (event) => {
+  if (!dragging.value) return;
+  position.value.x = event.clientX - 150; // Adjust for center
+  position.value.y = event.clientY - 100;
+};
+
+const stopDrag = () => {
+  dragging.value = false;
+  document.removeEventListener("mousemove", drag);
+  document.removeEventListener("mouseup", stopDrag);
+};
 // Lifecycle hooks
 onMounted(() => {
   console.log("Logged in user ID:", userId);
@@ -220,30 +251,76 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col items-center justify-center">
+    {{}}
     <!-- <div class="text-white z-[50] bg-black">My peerId: {{ peerId }}</div>
     <div class="text-white z-[50] bg-black">callTo: {{ callTo }}</div> -->
-
-    <div class="video-call bg-gray-950 p-4 z-[50]">
-      <video ref="localVideo" autoplay playsinline></video>
-      <video ref="remoteVideo" autoplay playsinline></video>
-
-      <div class="flex flex-col gap-2">
-        <button
-          @click="startCall"
-          class="bg-black py-1 px-2 rounded-md text-white"
+    <div>
+      <div
+        :class="
+          expand
+            ? 'video-call w-[100vw] h-[100vh] bg-gray-950 py-5 flex flex-col fixed justify-center items-center'
+            : 'video-call min-w-[300px] h-auto px-10 bg-gray-950 py-5 flex flex-col absolute justify-center items-center '
+        "
+        :style="
+          expand
+            ? 'top: 50%; left: 50%; transform: translate(-50%, -50%)'
+            : `left: ${position.x}px; top: ${position.y}px`
+        "
+        @mousedown="startDrag"
+      >
+        <div
+          @click="expand = !expand"
+          :class="
+            expand
+              ? 'absolute top-6 left-6 z-50 cursor-pointer '
+              : 'absolute top-2 left-2 z-50 cursor-pointer'
+          "
         >
-          Start Call
-        </button>
-        <button
-          @click="endCall"
-          class="bg-black py-1 px-2 rounded-md text-white"
-        >
-          End Call
-        </button>
+          <ArrowCollapseIcon v-if="expand" fillColor="#ffffff" :size="30" />
+          <ArrowExpandIcon v-if="!expand" fillColor="#ffffff" :size="25" />
+        </div>
+
+        <video
+          :class="
+            expand
+              ? 'transition-all w-[70vw] h-[40vh] mb-[10px] border border-white'
+              : 'transition-all w-[20vw] h-[15vh] mb-[10px] border border-white'
+          "
+          ref="localVideo"
+          autoplay
+          playsinline
+        ></video>
+        <video
+          :class="
+            expand
+              ? 'transition-all w-[70vw] h-[40vh] mb-[10px] border border-white'
+              : 'transition-all w-[20vw] h-[15vh] mb-[10px] border border-white'
+          "
+          ref="remoteVideo"
+          autoplay
+          playsinline
+        ></video>
+
+        <div :class="expand ? 'flex  gap-2 py-4' : 'flex flex-col gap-2'">
+          <button
+            @click="startCall"
+            class="bg-gray-900 py-1 px-2 rounded-md text-white"
+          >
+            Start Call
+          </button>
+          <button
+            @click="endCall"
+            class="bg-gray-900 py-1 px-2 rounded-md text-white"
+          >
+            End Call
+          </button>
+        </div>
       </div>
-
       <!-- Incoming Call Notification -->
-      <div v-if="incomingCall" class="incoming-call z-[50]">
+      <div
+        v-if="incomingCall"
+        class="incoming-call z-[50] w-auto px-4 py-3 bg-gray-900 text-white rounded-lg shadow-lg fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+      >
         <p>Incoming call from {{ incomingCallerId }}</p>
         <button
           @click="acceptCall"
@@ -264,23 +341,20 @@ onMounted(() => {
 
 <style scoped>
 .video-call {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  cursor: grab;
+  user-select: none;
 }
-video {
-  width: 200px;
-  height: 150px;
+/* video {
+  transition: all 0.3s ease-in-out;
+  width: auto;
+  height: auto;
   margin-bottom: 10px;
   border: 1px solid #ffff;
-}
+} */
 .incoming-call {
   background: rgba(0, 0, 0, 0.8);
   color: white;
   padding: 10px;
-  position: absolute;
-  top: 20px;
-  right: 20px;
   border-radius: 5px;
 }
 </style>

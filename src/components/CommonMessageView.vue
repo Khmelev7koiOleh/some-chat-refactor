@@ -33,44 +33,42 @@ import { useMessageViewStore } from "../store/messageView-store";
 import { useAuthStore } from "../store/auth-store";
 import { useScrollTo } from "../composables/scrollTo";
 import { useChangeBackground } from "../composables/changeBackground";
+import EmojiPicker from "vue3-emoji-picker";
+import { addToFirestore } from "../composables/addTo";
+
+const { error, loading, addToCollection, message } = addToFirestore();
 const { changeBackground, random } = useChangeBackground();
+
+import { useAuthStoreC } from "../store/use-auth.js";
+const authStoreC = useAuthStoreC();
+const { user, logoutPopUpOpen, login } = storeToRefs(authStoreC);
+import { useFirestore } from "../store/fireStore";
+const fireStore = useFirestore();
+
+const { showFindFriends, commonChat, currentChat } = storeToRefs(fireStore);
 
 const props = defineProps({
   chat: { type: Object },
 });
 const { chat } = toRefs(props);
+// const message = ref("");
+const showPicker = ref(false);
 
-// onMounted(() => {
-//   scrollToLastMessage();
-// });
-
-const authStore = useAuthStore();
-const { userDataForChat, localId, user: thisUser } = storeToRefs(authStore);
 const messageViewStore = useMessageViewStore();
 const commonChatStore = useCommonChatStore();
 const chatContainerId = "MessageSection";
 
 const { scrollToLastMessage } = useScrollTo();
-let message = ref("");
+
 let changeThemeOpen = ref(false);
 const getChatsSize = document.getElementById("MessageSection");
 const sendToCommonChat = async () => {
-  if (!message.value.trim()) return;
+  addToCollection("chat", message);
+  showPicker.value = false;
+};
 
-  try {
-    await addDoc(collection(db, "chat"), {
-      text: message.value,
-      createdAt: Timestamp.now(), // Store as Firestore Timestamp
-      sender: thisUser.value.displayName,
-      senderId: thisUser.value.localId,
-      img: thisUser.value.photoUrl,
-    });
-    scrollToLastMessage(getChatsSize);
-
-    message.value = ""; // Clear input after sending
-  } catch (error) {
-    console.error("Error sending message:", error);
-  }
+const addEmoji = (emoji) => {
+  message.value += emoji.i; // Append the selected emoji to the input
 };
 const sortedMessages = computed(() => {
   return [...chat.value].sort((a, b) => {
@@ -117,7 +115,7 @@ onMounted(() => {
                 class="w-12 h-12 rounded-full mr-0"
               />
             </div>
-            <div class="text-white">Common chat</div>
+            <div class="text-white">General chat</div>
           </div>
 
           <div class="flex justify-center items-center">
@@ -161,7 +159,7 @@ onMounted(() => {
         alt=""
       />
       <div
-        class="w-full flex flex-col justify-between items-end pb-[150px] md:pb-[150px]"
+        class="w-full flex flex-col justify-between items-end pt-[100px] pb-[150px] md:pb-[150px]"
       >
         <ScrollToBottomButton :container="chatContainerId" />
         <div
@@ -171,13 +169,13 @@ onMounted(() => {
         >
           <div
             :class="
-              chat.senderId === thisUser.localId
+              chat.senderId === user.localId
                 ? 'w-[90%]  flex flex-col justify-center items-end'
                 : 'w-[90%] flex flex-col justify-center items-start'
             "
           >
             <div class="flex">
-              <div v-if="chat.senderId !== thisUser.localId">
+              <div v-if="chat.senderId !== user.localId">
                 <img
                   :src="chat.img"
                   alt=""
@@ -186,7 +184,7 @@ onMounted(() => {
               </div>
               <div
                 :class="
-                  chat.senderId === thisUser.localId
+                  chat.senderId === user.localId
                     ? ' bg-green-500 max-h-[40px] flex flex-col justify-center items-center px-2 rounded-xl text-gray-200 break-all'
                     : 'bg-gray-500  max-h-[40px] flex flex-col justify-center items-center  py-[0px]  px-2 rounded-xl text-white break-all'
                 "
@@ -195,7 +193,7 @@ onMounted(() => {
                   {{ chat.text }}
                 </div>
                 <div
-                  class="flex justify-end items-center text-gray-200 text-[11px] mx-1"
+                  class="w-full flex justify-end items-center text-gray-200 text-[11px] mx-1"
                 >
                   {{
                     moment(chat.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
@@ -207,11 +205,6 @@ onMounted(() => {
             </div>
           </div>
         </div>
-
-        <!-- <div class="flex items-center">
-          <CheckAllIcon fillColor="#FFFFFF" :size="25" />
-          <div class="text-white">Message ...</div>
-        </div> -->
       </div>
     </div>
 
@@ -230,11 +223,19 @@ onMounted(() => {
             :size="24"
             class="flex items-center justify-center rotate-45"
           />
-          <EmoticonExcitedOutlineIcon
-            fillColor="#FFFFFF"
-            :size="24"
-            class="flex items-center justify-center"
-          />
+          <div class="w-[40px] h-full">
+            <button @click="showPicker = !showPicker">
+              <EmoticonExcitedOutlineIcon
+                fillColor="#FFFFFF"
+                :size="24"
+                class="flex items-center justify-center"
+              />
+            </button>
+
+            <div class="absolute bottom-[10vh] left-0">
+              <EmojiPicker v-if="showPicker" @select="addEmoji" />
+            </div>
+          </div>
         </div>
 
         <input

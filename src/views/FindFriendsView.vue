@@ -12,12 +12,12 @@ import { useMessageViewStore } from "../store/messageView-store";
 import { useCommonChatStore } from "../store/common-chat-store";
 import { useScrollTo } from "../composables/scrollTo";
 import { useChangeBackground } from "../composables/changeBackground";
-
+import { openChat } from "../composables/openChat";
 import { useAuthStoreC } from "../store/use-auth.js";
 import { useFirestore } from "../store/fireStore";
 const fireStore = useFirestore();
-
-const { commonChat: commonChatF } = storeToRefs(fireStore);
+const { openChatC } = openChat();
+const { commonChat: commonChatF, userDataForChat } = storeToRefs(fireStore);
 const authStoreC = useAuthStoreC();
 const { user, logoutPopUpOpen, login } = storeToRefs(authStoreC);
 const { changeBackground, random } = useChangeBackground();
@@ -27,7 +27,7 @@ const { messageViewOpen } = storeToRefs(messageViewStore);
 
 const { scrollToLastMessage } = useScrollTo();
 const authStore = useAuthStore();
-const { userDataForChat, localId, user: thisUser } = storeToRefs(authStore);
+const { localId, user: thisUser } = storeToRefs(authStore);
 
 const createNewChat = (user) => {
   userDataForChat.value = [];
@@ -46,39 +46,14 @@ const hideMyChat = (data) => {
     return true;
   }
 };
-const openChat = async (q) => {
-  changeBackground();
-  console.log("Opening chat:", user.value.localId);
-  scrollToLastMessage();
-  userDataForChat.value = [
-    {
-      id: q.uid,
-      name: q.displayName,
-      picture: q.photoURL,
-    },
-  ];
-
-  try {
-    await fireStore.getChatById(q.uid, user.value.localId); // Use `authStore.getChatById`
-  } catch (error) {
-    console.error("Error fetching chat:", error);
-  }
-  commonChatStore.onCommonChat = false;
-  changeBackground();
-
-  if (false) {
-    messageViewOpen.value = !messageViewOpen.value;
-  } else messageViewOpen.value = true;
-};
 </script>
 <template>
-  <div class="text-red-300">{{ user.localId }}.</div>
-  <div v-for="user in authStore.allUsers" :key="user">
-    <div @click="openChat(user)">
+  <div v-for="user in fireStore.allUsers" :key="user">
+    <div @click="openChatC(user)">
       <div
         v-if="hideMyChat(user.uid)"
         @click="createNewChat(user)"
-        class="w-full bg-gray-900 flex items-center overflow-auto rounded-lg m-1 px-4 py-3 cursor-pointer hover:bg-gray-800"
+        class="w-full bg-transparent flex items-center overflow-auto rounded-lg m-1 px-4 py-3 cursor-pointer hover:bg-gray-800"
       >
         <div>
           <img
@@ -91,7 +66,7 @@ const openChat = async (q) => {
           <div class="flex justify-between items-center">
             <div class="text-white">{{ user.displayName }}</div>
 
-            <div class="text-white">data</div>
+            <div class="text-white"></div>
           </div>
 
           <div class="flex items-center">

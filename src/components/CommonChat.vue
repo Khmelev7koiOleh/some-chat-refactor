@@ -57,9 +57,9 @@ const openChat = async () => {
     </div>
     <div class="w-full">
       <div class="flex justify-between items-center">
-        <div class="text-white">Common Chat</div>
+        <div class="text-white">General chat</div>
 
-        <div class="text-white">date</div>
+        <div class="text-white"></div>
       </div>
 
       <div class="flex items-center">

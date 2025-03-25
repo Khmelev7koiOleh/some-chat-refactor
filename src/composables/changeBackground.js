@@ -1,3 +1,4 @@
+import { persistentLocalCache } from "firebase/firestore";
 import { ref } from "vue";
 
 export function useChangeBackground() {

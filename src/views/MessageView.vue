@@ -31,7 +31,11 @@ import { useAuthStoreC } from "../store/use-auth.js";
 import { useFirestore } from "../store/fireStore";
 const fireStore = useFirestore();
 
-const { commonChat: commonChatF, currentChatId } = storeToRefs(fireStore);
+const {
+  commonChat: commonChatF,
+  currentChatId,
+  userDataForChat,
+} = storeToRefs(fireStore);
 const authStoreC = useAuthStoreC();
 const { user, logoutPopUpOpen, login } = storeToRefs(authStoreC);
 const { changeBackground, random } = useChangeBackground();
@@ -39,10 +43,10 @@ const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
 
 const videoCall = useVideoCallOpen();
-const { videoCallOpen } = storeToRefs(videoCall);
+const { videoCallOpen, expand } = storeToRefs(videoCall);
 const authStore = useAuthStore();
 const {
-  userDataForChat,
+  // userDataForChat,
   user: userAuth,
   currentChatId: currentChatIdAuth,
   currentChat: currentChatAuth,
@@ -79,30 +83,12 @@ const sendMessage = async () => {
 
   await fireStore.sendMessage({
     message: message.value,
-    chatId: currentChatId.value, // Now safely accessed
+    chatId: currentChatId.value,
   });
-
-  message.value = ""; // Clear input after sending
+  message.value = "";
+  showPicker.value = false;
 };
 
-// const callToUser = (id) => {
-//   console.log(id);
-//   console.log(currentChat.value.participants[1]);
-//   // Find the user in the list whose id matches currentChat.participants[0].id
-//   const targetUser = peerUsers.value.find(
-//     (user) => id === currentChat.value.participants[0]
-//   );
-
-//   // If targetUser is found, initiate the call
-//   if (targetUser) {
-//     fireStore.callUser(targetUser.peerId); // Assuming callUser is in your store and accepts peerId
-
-//     peerRef.value = targetUser.peerId;
-//     console.log(peerRef.value);
-//   } else {
-//     console.error("No matching user found to call");
-//   }
-// };
 scrollToLastMessage(chatContainerId);
 watch(currentChat, () => {
   scrollToLastMessage(chatContainerId);
@@ -125,7 +111,7 @@ onMounted(() => {
   >
     <img
       class="w-full md:w-[calc(100vw-420px)] h-full fixed z-[-1]"
-      :src="`https://picsum.photos/id/${random}/200/300`"
+      :src="`https://picsum.photos/id/${random}/250/300`"
       alt=""
     />
 
@@ -210,6 +196,7 @@ onMounted(() => {
         <video id="remoteVideo" autoplay></video>
       </div>
     </div>
+    <div class="text-green-800 text-center text-sm">{{}}</div>
     <div
       id="MessageSection"
       class="w-full min-h-[calc(100vh-150px))] overflow-auto touch-auto h-[calc(100vh-200px)] justify-end items-start cursor-pointer"
@@ -280,7 +267,14 @@ onMounted(() => {
       </div>
     </div>
 
-    <div id="SendSection" class="fixed bottom-0 bg-black h-[60px] w-full">
+    <div
+      id="SendSection"
+      :class="
+        expand
+          ? 'fixed bottom-0 bg-black z-[-1] h-[60px] w-full'
+          : 'fixed bottom-0 bg-black z-[1] h-[60px] w-full'
+      "
+    >
       <div class="h-full w-full flex items-center">
         <div class="flex justify-between items-center gap-4 mx-6">
           <Paperclip
@@ -298,7 +292,7 @@ onMounted(() => {
               />
             </button>
 
-            <div class="absolute bottom-[10vh] left-0">
+            <div class="absolute bottom-15 left-0">
               <EmojiPicker v-if="showPicker" @select="addEmoji" />
             </div>
           </div>

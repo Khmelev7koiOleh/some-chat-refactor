@@ -4,38 +4,50 @@ import LogoutIcon from "vue-material-design-icons/Logout.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import ChatsView from "./ChatsView.vue";
-import CommonChat from "./CommonChat.vue";
+import CommonChat from "../components/CommonChat.vue";
 import MessageView from "./MessageView.vue";
 import FindFriendsView from "./FindFriendsView.vue";
+import Search from "../components/Search.vue";
 import { storeToRefs } from "pinia";
 import { ref, onMounted } from "vue";
 import { useAuthStore } from "../store/auth-store";
 import { useMessageViewStore } from "../store/messageView-store";
 import CommonMessageView from "../components/CommonMessageView.vue";
+import { openChat } from "../composables/openChat";
 import DefaultView from "../components/DefaultView.vue";
 import { useCommonChatStore } from "../store/common-chat-store";
 import { useAuthStoreC } from "../store/use-auth.js";
+const { openChatC } = openChat();
 const authStoreC = useAuthStoreC();
 const { user: userC, logoutPopUpOpen, login } = storeToRefs(authStoreC);
 import { useFirestore } from "../store/fireStore";
 const fireStore = useFirestore();
 
-const { commonChat: commonChatF } = storeToRefs(fireStore);
+const {
+  userDataForChat,
+
+  showFindFriends,
+  commonChat,
+  currentChat,
+} = storeToRefs(fireStore);
 const commonChatStore = useCommonChatStore();
 const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
 
-const authStore = useAuthStore();
-const { userDataForChat, user, showFindFriends, commonChat, currentChat } =
-  storeToRefs(authStore);
-
+const handleSearch = (user) => {
+  console.log("User selected:", user);
+  openChatC(user);
+};
 onMounted(async () => {
   try {
-    authStore.fetchPeerIDs();
-    authStore.getAllUsers();
-
-    authStore.getAllChatsByUser();
-    authStore.getCommonChatsByUser();
+    fireStore.fetchPeerIDs();
+    fireStore.getAllUsers();
+    // fireStore.getChatById();
+    fireStore.getAllChatsByUser();
+    fireStore.getCommonChatsByUser();
+    console.log(currentChat);
+    console.log(commonChat);
+    console.log(userDataForChat.value);
   } catch (error) {
     console.log(error);
   }
@@ -46,7 +58,7 @@ const combinedFunc = async () => {
 };
 </script>
 <template>
-  <div class="fixed w-full md:w-[420px] z-40 bg-gray-900 h-[100vh]">
+  <div class="fixed w-full md:w-[420px] z-40 bg-black h-[100vh]">
     <div
       @click="combinedFunc()"
       class="text-white cursor-pointer absolute top-0 md:bottom-0 right-0 md:right-0 bg-gray-900 w-[100%] h-[70px] md:h-[70px] flex justify-center items-center gap-2"
@@ -82,22 +94,8 @@ const combinedFunc = async () => {
       </div>
     </div>
 
-    <div id="Search" class="w-full my-4 px-4">
-      <div
-        class="w-full flex justify-start items-center gap-3 px-2 py-1 border border-gray-200 rounded-lg"
-      >
-        <MagnifyIcon
-          fillColor="#FFFFFF"
-          :size="18"
-          class="flex items-center justify-center"
-        />
-        <input
-          @click="showFindFriends = !showFindFriends"
-          type="text"
-          placeholder="Search"
-          class="focus:outline-none placeholder:text-gray-200 placeholder:text-md"
-        />
-      </div>
+    <div id="Search" class="w-full px-4">
+      <Search @handleSearch="handleSearch" :data="fireStore.allUsers" />
     </div>
 
     <div v-if="!showFindFriends" class="overflow-auto h-[100vh]">
@@ -105,17 +103,19 @@ const combinedFunc = async () => {
       <FindFriendsView />
     </div>
 
-    <div v-if="showFindFriends">
+    <!-- <div class="text-red-400" v-if="showFindFriends">
       <ChatsView />
-    </div>
+    </div> -->
   </div>
   <div>
+    <!-- <div class="text-4xl text-cyan-400">{{ userDataForChat }}</div> -->
     <div
       class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full h-full text-center"
       v-if="commonChatStore.onCommonChat"
     >
       <CommonMessageView :chat="commonChat" />
     </div>
+
     <div v-else>
       <div v-if="userDataForChat.length && messageViewOpen">
         <MessageView :chat="currentChat" />

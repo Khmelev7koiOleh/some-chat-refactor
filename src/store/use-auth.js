@@ -33,6 +33,7 @@ export const useAuthStoreC = defineStore(
   "authc",
   () => {
     //_____________
+
     const logoutPopUpOpen = ref(false);
     const router = useRouter();
     //_____________
