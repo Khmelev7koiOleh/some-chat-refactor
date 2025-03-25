@@ -259,7 +259,7 @@ onMounted(() => {
       <div
         :class="
           expand
-            ? 'video-call w-[100vw] h-[100vh] bg-gray-950 py-5 flex flex-col fixed justify-center items-center'
+            ? 'video-call w-[100vw] h-[100vh] bg-gray-950 py-2 flex flex-col fixed justify-center items-center'
             : 'video-call w-[300px] h-auto px-10 bg-gray-950 py-5 flex flex-col absolute justify-center items-center '
         "
         :style="
@@ -289,7 +289,7 @@ onMounted(() => {
         <video
           :class="
             expand
-              ? 'transition-all w-[70vw] h-[40vh] mb-[10px] border border-white'
+              ? 'transition-all w-[70vw] h-[30vh] mb-[10px] border border-white'
               : 'transition-all w-[300px] h-[15vh] mb-[10px] border border-white'
           "
           ref="localVideo"
@@ -299,7 +299,7 @@ onMounted(() => {
         <video
           :class="
             expand
-              ? 'transition-all w-[70vw] h-[40vh] mb-[10px] border border-white'
+              ? 'transition-all w-[70vw] h-[30vh] mb-[10px] border border-white'
               : 'transition-all w-[300px] h-[15vh] mb-[10px] border border-white'
           "
           ref="remoteVideo"
@@ -349,6 +349,7 @@ onMounted(() => {
 .video-call {
   cursor: grab;
   user-select: none;
+  pointer-events: none;
 }
 
 .incoming-call {
