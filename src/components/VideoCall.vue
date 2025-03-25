@@ -295,8 +295,6 @@ onMounted(() => {
         @touchstart="startDrag"
         @mouseup="stopDrag"
         @touchend="stopDrag"
-        @mousemove="dragging"
-        @touchmove="dragging"
       >
         <div
           @click="expand = !expand"
