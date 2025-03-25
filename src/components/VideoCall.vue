@@ -211,6 +211,7 @@ const rejectCall = async () => {
 // End call
 const endCall = () => {
   cleanup();
+  expand.value = false;
 };
 const position = ref({ x: 100, y: 100 });
 const dragging = ref(false);
@@ -267,6 +268,11 @@ onMounted(() => {
             : `left: ${position.x}px; top: ${position.y}px`
         "
         @mousedown="startDrag"
+        @touchstart="startDrag"
+        @mouseup="stopDrag"
+        @touchend="stopDrag"
+        @mousemove="dragging"
+        @touchmove="dragging"
       >
         <div
           @click="expand = !expand"
@@ -304,13 +310,13 @@ onMounted(() => {
         <div :class="expand ? 'flex  gap-2 py-4' : 'flex flex-col gap-2'">
           <button
             @click="startCall"
-            class="bg-gray-900 py-1 px-2 rounded-md text-white"
+            class="bg-blue-900 py-1 px-2 rounded-md text-white"
           >
             Start Call
           </button>
           <button
             @click="endCall"
-            class="bg-gray-900 py-1 px-2 rounded-md text-white"
+            class="bg-red-700 py-1 px-2 rounded-md text-white"
           >
             End Call
           </button>
