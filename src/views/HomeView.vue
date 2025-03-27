@@ -10,7 +10,6 @@ import FindFriendsView from "./FindFriendsView.vue";
 import Search from "../components/Search.vue";
 import { storeToRefs } from "pinia";
 import { ref, onMounted } from "vue";
-import { useAuthStore } from "../store/auth-store";
 import { useMessageViewStore } from "../store/messageView-store";
 import CommonMessageView from "../components/CommonMessageView.vue";
 import { openChat } from "../composables/openChat";
@@ -42,12 +41,12 @@ onMounted(async () => {
   try {
     fireStore.fetchPeerIDs();
     fireStore.getAllUsers();
-    // fireStore.getChatById();
+    fireStore.getChatById();
     fireStore.getAllChatsByUser();
     fireStore.getCommonChatsByUser();
-    console.log(currentChat);
-    console.log(commonChat);
-    console.log(userDataForChat.value);
+    // console.log(currentChat);
+    // console.log(commonChat);
+    // console.log(userDataForChat.value);
   } catch (error) {
     console.log(error);
   }
@@ -126,7 +125,6 @@ const combinedFunc = async () => {
     </div> -->
   </div>
   <div>
-    <!-- <div class="text-4xl text-cyan-400">{{ userDataForChat }}</div> -->
     <div
       class="md:ml-[420px] md:w-[calc(100vw-420px)] w-full h-full text-center"
       v-if="commonChatStore.onCommonChat"

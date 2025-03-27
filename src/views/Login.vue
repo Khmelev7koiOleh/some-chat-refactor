@@ -1,7 +1,5 @@
 <script setup>
-import { useAuthStore } from "../store/auth-store";
 import { storeToRefs } from "pinia";
-const authStore = useAuthStore();
 
 import { ref } from "vue";
 import { useAuthStoreC } from "../store/use-auth.js";

@@ -6,7 +6,6 @@ import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import CheckAllIcon from "vue-material-design-icons/CheckAll.vue";
 
-import { useAuthStore } from "../store/auth-store";
 import { onMounted } from "vue";
 import { useMessageViewStore } from "../store/messageView-store";
 import { useCommonChatStore } from "../store/common-chat-store";
@@ -26,8 +25,6 @@ const messageViewStore = useMessageViewStore();
 const { messageViewOpen } = storeToRefs(messageViewStore);
 
 const { scrollToLastMessage } = useScrollTo();
-const authStore = useAuthStore();
-const { localId, user: thisUser } = storeToRefs(authStore);
 
 const createNewChat = (user) => {
   userDataForChat.value = [];

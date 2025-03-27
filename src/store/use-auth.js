@@ -92,17 +92,6 @@ export const useAuthStoreC = defineStore(
 
         setUser(result.user);
 
-        // Generate and store Peer ID in the same document
-        //   const peer = new Peer();
-        //   peer.on("open", async (id) => {
-        //     console.log("Generated Peer ID:", id);
-
-        //     // Update the existing user document with peerId
-        //     await setDoc(userRef, { ...userData, peerId: id }, { merge: true });
-
-        //     console.log("Peer ID added to user document.");
-        //   });
-
         router.push("/");
       } catch (error) {
         console.error("Login failed:", error);

@@ -20,7 +20,7 @@ import ArrowLeftIcon from "vue-material-design-icons/ArrowLeft.vue";
 import PlusIcon from "vue-material-design-icons/Plus.vue";
 import SendIcon from "vue-material-design-icons/Send.vue";
 import { useScrollTo } from "../composables/scrollTo";
-import { useAuthStore } from "../store/auth-store";
+
 import { useMessageViewStore } from "../store/messageView-store";
 import { useVideoCallOpen } from "../store/video-call-store";
 import ScrollToBottomButton from "../components/ScrollToBottomButton.vue";
@@ -35,6 +35,7 @@ const {
   commonChat: commonChatF,
   currentChatId,
   userDataForChat,
+  chats,
 } = storeToRefs(fireStore);
 const authStoreC = useAuthStoreC();
 const { user, logoutPopUpOpen, login } = storeToRefs(authStoreC);
@@ -44,16 +45,7 @@ const { messageViewOpen } = storeToRefs(messageViewStore);
 
 const videoCall = useVideoCallOpen();
 const { videoCallOpen, expand } = storeToRefs(videoCall);
-const authStore = useAuthStore();
-const {
-  // userDataForChat,
-  user: userAuth,
-  currentChatId: currentChatIdAuth,
-  currentChat: currentChatAuth,
-  showFindFriends,
-  peerUsers,
-  chats,
-} = storeToRefs(authStore);
+
 const { currentChat } = storeToRefs(fireStore);
 
 const chatContainerId = "MessageSection";
@@ -97,6 +89,11 @@ onBeforeMount(() => {
   changeBackground();
 });
 onMounted(() => {
+  fireStore.fetchPeerIDs();
+  fireStore.getAllUsers();
+  fireStore.getChatById();
+  fireStore.getAllChatsByUser();
+  fireStore.getCommonChatsByUser();
   console.log(random);
   console.log(random.value);
 
@@ -169,34 +166,12 @@ onMounted(() => {
     </div>
 
     <div v-if="videoCallOpen">
-      <!-- <div @click="callUserToParticipant(currentChat.participants[0].peerId)">
-        0
-      </div> -->
       <div class="w-[300px] h-[300px] fixed top-[15%] left-[5vw] z-[-0]">
         <div class="flex items-center justify-center">
           <VideoCall :callTo="userDataForChat[0].id" />
         </div>
       </div>
-      <div>
-        {{}}
-        <!-- <button @click="callToUser(userDataForChat[0].id)">0000</button>
-        <h2>Available Users</h2>
-        <ul>
-          <li v-for="user in peerUsers" :key="user.id">
-            <button v-if="user.peerId" class="text-white bg-black py-1 px-2">
-              Call {{ user.displayName }}
-            </button>
-          </li>
-        </ul> -->
-
-        <!-- <div class="text-white">
-          {{ peerUsers }}
-        </div> -->
-
-        <video id="remoteVideo" autoplay></video>
-      </div>
     </div>
-    <!-- <div class="text-green-800 text-center text-sm">check1</div> -->
 
     <div
       id="MessageSection"
@@ -204,13 +179,10 @@ onMounted(() => {
     >
       <ScrollToBottomButton :container="chatContainerId" />
 
-      <div>
+      <div v-if="chats.length > 0">
         <!-- Loop through all chats -->
         <div v-for="(chat, chatIndex) in currentChat" :key="chatIndex">
-          <!-- Check if messages exist in chat -->
           <div v-if="chat">
-            <!-- Loop through messages in each chat -->
-
             <div
               v-for="(msg, msgIndex) in chat"
               :key="msgIndex"
@@ -263,9 +235,9 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      <!-- <div v-else>
-        <p>No chats available</p>
-      </div> -->
+      <div v-else>
+        <p>No chats are available</p>
+      </div>
     </div>
 
     <div

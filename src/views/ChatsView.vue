@@ -5,7 +5,7 @@ import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import { storeToRefs } from "pinia";
-import { useAuthStore } from "../store/auth-store";
+
 import { useFirestore } from "../store/fireStore";
 
 import { useAuthStoreC } from "../store/use-auth.js";
@@ -19,8 +19,6 @@ const {
   userDataForChat,
 } = storeToRefs(fireStore);
 
-// const authStore = useAuthStore();
-// const { userDataForChat, chats } = storeToRefs(authStore); // Remove `getChatById` here
 const hideMyChat = (data) => {
   if (data === user.value.localId) {
     return false;

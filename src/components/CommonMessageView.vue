@@ -30,7 +30,6 @@ import {
 } from "firebase/firestore";
 import { useCommonChatStore } from "../store/common-chat-store";
 import { useMessageViewStore } from "../store/messageView-store";
-import { useAuthStore } from "../store/auth-store";
 import { useScrollTo } from "../composables/scrollTo";
 import { useChangeBackground } from "../composables/changeBackground";
 import EmojiPicker from "vue3-emoji-picker";

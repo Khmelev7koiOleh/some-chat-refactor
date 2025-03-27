@@ -5,7 +5,6 @@ import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import CheckAllIcon from "vue-material-design-icons/CheckAll.vue";
 
-import { useAuthStore } from "../store/auth-store";
 import { onMounted } from "vue";
 import { useMessageViewStore } from "../store/messageView-store";
 import { useCommonChatStore } from "../store/common-chat-store";
@@ -27,7 +26,7 @@ export function openChat() {
   const { messageViewOpen } = storeToRefs(messageViewStore);
 
   const { scrollToLastMessage } = useScrollTo();
-  const authStore = useAuthStore();
+
   const openChatC = async (q) => {
     changeBackground();
     console.log("Opening chat:", user.value.localId);
@@ -41,7 +40,7 @@ export function openChat() {
     ];
 
     try {
-      await fireStore.getChatById(q.uid, user.value.localId); // Use `authStore.getChatById`
+      await fireStore.getChatById(q.uid, user.value.localId);
     } catch (error) {
       console.error("Error fetching chat:", error);
     }

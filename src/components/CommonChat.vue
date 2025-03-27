@@ -6,7 +6,7 @@ import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import CheckAllIcon from "vue-material-design-icons/CheckAll.vue";
 import { v4 as uuid } from "uuid";
-import { useAuthStore } from "../store/auth-store";
+
 import { onMounted } from "vue";
 import { useMessageViewStore } from "../store/messageView-store";
 import { auth, db } from "../firebase-init";
@@ -24,18 +24,28 @@ import {
   onSnapshot,
   query,
 } from "firebase/firestore";
-const messageViewStore = useMessageViewStore();
-
-const authStore = useAuthStore();
-const { userDataForChat, localId, user: thisUser } = storeToRefs(authStore);
 import { useCommonChatStore } from "../store/common-chat-store";
+import { useAuthStoreC } from "../store/use-auth.js";
+import { useFirestore } from "../store/fireStore";
+const fireStore = useFirestore();
+
+const {
+  commonChat: commonChatF,
+  currentChatId,
+  userDataForChat,
+  chats,
+} = storeToRefs(fireStore);
+const messageViewStore = useMessageViewStore();
+const authStoreC = useAuthStoreC();
+const { user, localId } = storeToRefs(authStoreC);
+
 const commonChatStore = useCommonChatStore();
 
 const openChat = async () => {
-  console.log("Opening chat:", thisUser.value.localId);
+  console.log("Opening chat:", user.value.localId);
 
   try {
-    await authStore.openCommonChat(user.uid, thisUser.value.localId); // Use `authStore.openCommonChat`
+    await fireStore.openCommonChat(user.uid, user.value.localId);
   } catch (error) {
     console.error("Error fetching chat:", error);
   }
