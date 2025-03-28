@@ -161,7 +161,13 @@ onMounted(() => {
     </div>
 
     <div>
-      <div class="w-[300px] h-[300px] fixed top-[15%] left-[5vw]">
+      <div
+        :class="
+          videoCall
+            ? 'w-[300px] h-[300px] fixed top-[20vh] right-[5vw] '
+            : 'w-[300px] h-[300px] fixed top-[15%] left-[5vw] '
+        "
+      >
         <div class="flex items-center justify-center">
           <VideoCall :callTo="userDataForChat[0].id" />
         </div>

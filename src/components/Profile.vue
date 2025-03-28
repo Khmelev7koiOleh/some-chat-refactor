@@ -28,7 +28,9 @@ const {
 } = storeToRefs(fireStore);
 </script>
 <template>
-  <div class="w-[33vw] h-[60vh] bg-gray-950 rounded-xl relative">
+  <div
+    class="min-w-[350px] max-w-[600px] h-[60vh] bg-gray-950 rounded-xl relative"
+  >
     <!-- <div class="text-white">{{ fireStore.allUsers }}</div> -->
     <div class="absolute top-4 left-4">
       <Close fillColor="#ffff" @click="profileStore.toggleOnProfileOpen" />

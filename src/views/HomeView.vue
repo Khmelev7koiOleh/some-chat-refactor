@@ -67,8 +67,8 @@ const combinedFunc = async () => {
     v-if="onProfileOpen"
     :class="
       videoCallOpen
-        ? ' fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/3'
-        : ' fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/3'
+        ? ' fixed top-1/3 z-60 left-1/2 transform -translate-x-1/2 -translate-y-1/3'
+        : ' fixed top-1/3 z-60 left-1/2 transform -translate-x-1/2 -translate-y-1/3'
     "
   >
     <Profile />
