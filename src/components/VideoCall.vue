@@ -276,7 +276,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center z-40">
+  <div class="flex flex-col items-center justify-center">
     <div
       v-if="videoCallOpen"
       :class="
@@ -298,8 +298,8 @@ onMounted(() => {
         @click="expand = !expand"
         :class="
           expand
-            ? 'absolute top-10 left-6 z-50 cursor-pointer '
-            : 'absolute top-2 left-2 z-50 cursor-pointer'
+            ? 'absolute top-10 left-6 z-40 cursor-pointer '
+            : 'absolute top-2 left-2 z-40 cursor-pointer'
         "
       >
         <ArrowCollapseIcon v-if="expand" fillColor="#ffffff" :size="30" />

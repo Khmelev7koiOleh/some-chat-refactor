@@ -76,8 +76,8 @@ const combinedFunc = async () => {
   <div
     :class="
       videoCallOpen
-        ? 'fixed w-full md:w-[420px] z-50 bg-gray-950 h-[100vh]'
-        : 'fixed w-full md:w-[420px] z-60 bg-gray-950 h-[100vh]'
+        ? 'fixed  w-full md:w-[420px] z-50 bg-gray-950 h-[100vh]'
+        : 'fixed w-full md:w-[420px] z-50 bg-gray-950 h-[100vh]'
     "
   >
     <div
