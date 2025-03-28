@@ -4,7 +4,7 @@ import LogoutIcon from "vue-material-design-icons/Logout.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import ChatsView from "./ChatsView.vue";
-import CommonChat from "../components/CommonChat.vue";
+import CommonChat from "../views/CommonChat.vue";
 import MessageView from "./MessageView.vue";
 import FindFriendsView from "./FindFriendsView.vue";
 import Search from "../components/Search.vue";
@@ -14,12 +14,22 @@ import { useMessageViewStore } from "../store/messageView-store";
 import CommonMessageView from "../components/CommonMessageView.vue";
 import { openChat } from "../composables/openChat";
 import DefaultView from "../components/DefaultView.vue";
+import Profile from "../components/Profile.vue";
 import { useCommonChatStore } from "../store/common-chat-store";
 import { useAuthStoreC } from "../store/use-auth.js";
+import { useVideoCallOpen } from "../store/video-call-store";
+import { useFirestore } from "../store/fireStore";
+import { useProfileStore } from "../store/profile-store.js";
+import { useGetUserData } from "../composables/getUserData";
+const videoCall = useVideoCallOpen();
+const { expand, videoCallOpen } = storeToRefs(videoCall);
+const profileStore = useProfileStore();
+const { onProfileOpen } = storeToRefs(profileStore);
+const { getUserData, userProfileData } = storeToRefs(useGetUserData);
 const { openChatC } = openChat();
 const authStoreC = useAuthStoreC();
 const { user: userC, logoutPopUpOpen, login } = storeToRefs(authStoreC);
-import { useFirestore } from "../store/fireStore";
+
 const fireStore = useFirestore();
 
 const {
@@ -39,14 +49,10 @@ const handleSearch = (user) => {
 };
 onMounted(async () => {
   try {
-    fireStore.fetchPeerIDs();
     fireStore.getAllUsers();
     fireStore.getChatById();
     fireStore.getAllChatsByUser();
     fireStore.getCommonChatsByUser();
-    // console.log(currentChat);
-    // console.log(commonChat);
-    // console.log(userDataForChat.value);
   } catch (error) {
     console.log(error);
   }
@@ -58,24 +64,22 @@ const combinedFunc = async () => {
 </script>
 <template>
   <div
-    v-if="incomingCall"
-    class="incoming-call z-[60] w-auto px-4 py-3 bg-gray-900 text-white rounded-lg shadow-lg absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+    v-if="onProfileOpen"
+    :class="
+      videoCallOpen
+        ? ' fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/3'
+        : ' fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/3'
+    "
   >
-    <p>Incoming call from {{ incomingCallerId }}</p>
-    <button
-      @click="acceptCall"
-      class="bg-green-500 py-1 px-2 rounded-md text-white"
-    >
-      Accept
-    </button>
-    <button
-      @click="rejectCall"
-      class="bg-red-500 py-1 px-2 rounded-md text-white"
-    >
-      Reject
-    </button>
+    <Profile />
   </div>
-  <div class="fixed w-full md:w-[420px] z-40 bg-black h-[100vh]">
+  <div
+    :class="
+      videoCallOpen
+        ? 'fixed w-full md:w-[420px] z-50 bg-gray-950 h-[100vh]'
+        : 'fixed w-full md:w-[420px] z-60 bg-gray-950 h-[100vh]'
+    "
+  >
     <div
       @click="combinedFunc()"
       class="text-white cursor-pointer absolute top-0 md:bottom-0 right-0 md:right-0 bg-gray-900 w-[100%] h-[70px] md:h-[70px] flex justify-center items-center gap-2"
@@ -98,7 +102,7 @@ const combinedFunc = async () => {
       </div>
     </div>
     <div id="Header" class="flex justify-between items-center px-4 py-2 pt-10">
-      <div class="text-xl text-gray-200 font-medium">Chats main</div>
+      <div class="text-xl text-gray-200 font-medium">Chats</div>
 
       <div class="flex justify-between items-center gap-4 relative">
         <AccountGroupIcon fillColor="#FFFFFF" :size="25" />
@@ -117,7 +121,9 @@ const combinedFunc = async () => {
 
     <div v-if="!showFindFriends" class="overflow-auto h-[100vh]">
       <div><CommonChat /></div>
-      <FindFriendsView />
+      <div>
+        <FindFriendsView />
+      </div>
     </div>
 
     <!-- <div class="text-red-400" v-if="showFindFriends">

@@ -47,7 +47,7 @@ const selectUser = (user) => {
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search"
+          :placeholder="showFindFriends ? 'Search by name' : 'Search'"
           class="focus:outline-none placeholder:text-gray-200 placeholder:text-md"
         />
       </div>
@@ -57,10 +57,12 @@ const selectUser = (user) => {
         v-if="showFindFriends"
         v-for="user in filteredItems"
         :key="userIndex"
-        class="flex flex-col items-start justify-center py-3"
+        class="flex flex-col items-start justify-center py-2 px-2"
         @click="selectUser(user)"
       >
-        <div class="flex justify-start items-center gap-3">
+        <div
+          class="flex justify-start items-center gap-3 bg-gray-900 w-full h-full px-2 py-1 rounded-xl"
+        >
           <img class="w-[3rem] rounded-full" :src="user.photoURL" alt="" />
           <div class="text-white">{{ user.displayName }}</div>
         </div>

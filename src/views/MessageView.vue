@@ -89,7 +89,6 @@ onBeforeMount(() => {
   changeBackground();
 });
 onMounted(() => {
-  fireStore.fetchPeerIDs();
   fireStore.getAllUsers();
   fireStore.getChatById();
   fireStore.getAllChatsByUser();
@@ -156,17 +155,13 @@ onMounted(() => {
             "
           >
             <button @click="changeBackground">Change the theme</button>
-            <button @click="changeBackground">Change the theme</button>
-            <button @click="changeBackground">Change the theme</button>
-            <button @click="changeBackground">Change the theme</button>
-            <button @click="changeBackground">Change the theme</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="videoCallOpen">
-      <div class="w-[300px] h-[300px] fixed top-[15%] left-[5vw] z-[-0]">
+    <div>
+      <div class="w-[300px] h-[300px] fixed top-[15%] left-[5vw] z-50">
         <div class="flex items-center justify-center">
           <VideoCall :callTo="userDataForChat[0].id" />
         </div>

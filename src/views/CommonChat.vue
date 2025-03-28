@@ -45,7 +45,7 @@ const openChat = async () => {
   console.log("Opening chat:", user.value.localId);
 
   try {
-    await fireStore.openCommonChat(user.uid, user.value.localId);
+    await fireStore.openCommonChat(user.value.localId);
   } catch (error) {
     console.error("Error fetching chat:", error);
   }
@@ -55,7 +55,7 @@ const openChat = async () => {
 </script>
 <template>
   <div
-    class="w-full flex items-center px-4 py-3 cursor-pointer"
+    class="w-full flex items-center px-4 py-3 cursor-pointer hover:bg-gray-800 rounded-lg m-1"
     @click="openChat(user)"
   >
     <div>

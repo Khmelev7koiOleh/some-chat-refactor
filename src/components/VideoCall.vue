@@ -21,7 +21,7 @@ import { storeToRefs } from "pinia";
 import { useVideoCallOpen } from "../store/video-call-store";
 
 const videoCall = useVideoCallOpen();
-const { expand } = storeToRefs(videoCall);
+const { expand, videoCallOpen } = storeToRefs(videoCall);
 // PROPS
 const props = defineProps({
   callTo: { type: String, required: true }, // ID of the user to call
@@ -160,6 +160,7 @@ const startCall = async () => {
 
 // Accept Call (Callee)
 const acceptCall = async () => {
+  videoCallOpen.value = true;
   if (!incomingCallerPeerId.value) {
     console.error("No incoming call to accept");
     return;
@@ -275,94 +276,90 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center z-50">
-    {{}}
-    <!-- <div class="text-white z-[50] bg-black">My peerId: {{ peerId }}</div>
-    <div class="text-white z-[50] bg-black">callTo: {{ callTo }}</div> -->
-    <div>
+  <div class="flex flex-col items-center justify-center z-40">
+    <div
+      v-if="videoCallOpen"
+      :class="
+        expand
+          ? 'video-call w-[100vw] h-[100vh] bg-gray-950 py-2 flex flex-col fixed justify-center items-center'
+          : 'video-call w-[300px] h-auto px-10 bg-gray-950 py-5 flex flex-col absolute justify-center items-center '
+      "
+      :style="
+        expand
+          ? 'top: 50%; left: 50%; transform: translate(-50%, -50%)'
+          : `left: ${position.x}px; top: ${position.y}px`
+      "
+      @mousedown="startDrag"
+      @touchstart="startDrag"
+      @mouseup="stopDrag"
+      @touchend="stopDrag"
+    >
       <div
+        @click="expand = !expand"
         :class="
           expand
-            ? 'video-call w-[100vw] h-[100vh] bg-gray-950 py-2 flex flex-col fixed justify-center items-center'
-            : 'video-call w-[300px] h-auto px-10 bg-gray-950 py-5 flex flex-col absolute justify-center items-center '
+            ? 'absolute top-10 left-6 z-50 cursor-pointer '
+            : 'absolute top-2 left-2 z-50 cursor-pointer'
         "
-        :style="
+      >
+        <ArrowCollapseIcon v-if="expand" fillColor="#ffffff" :size="30" />
+        <ArrowExpandIcon v-if="!expand" fillColor="#ffffff" :size="25" />
+      </div>
+
+      <video
+        :class="
           expand
-            ? 'top: 50%; left: 50%; transform: translate(-50%, -50%)'
-            : `left: ${position.x}px; top: ${position.y}px`
+            ? 'transition-all w-[70vw] h-[30vh] mb-[10px] border border-white'
+            : 'transition-all w-[300px] h-[15vh] mb-[10px] border border-white'
         "
-        @mousedown="startDrag"
-        @touchstart="startDrag"
-        @mouseup="stopDrag"
-        @touchend="stopDrag"
-      >
-        <div
-          @click="expand = !expand"
-          :class="
-            expand
-              ? 'absolute top-10 left-6 z-50 cursor-pointer '
-              : 'absolute top-2 left-2 z-50 cursor-pointer'
-          "
-        >
-          <ArrowCollapseIcon v-if="expand" fillColor="#ffffff" :size="30" />
-          <ArrowExpandIcon v-if="!expand" fillColor="#ffffff" :size="25" />
-        </div>
+        ref="localVideo"
+        autoplay
+        playsinline
+      ></video>
+      <video
+        :class="
+          expand
+            ? 'transition-all w-[70vw] h-[30vh] mb-[10px] border border-white'
+            : 'transition-all w-[300px] h-[15vh] mb-[10px] border border-white'
+        "
+        ref="remoteVideo"
+        autoplay
+        playsinline
+      ></video>
 
-        <video
-          :class="
-            expand
-              ? 'transition-all w-[70vw] h-[30vh] mb-[10px] border border-white'
-              : 'transition-all w-[300px] h-[15vh] mb-[10px] border border-white'
-          "
-          ref="localVideo"
-          autoplay
-          playsinline
-        ></video>
-        <video
-          :class="
-            expand
-              ? 'transition-all w-[70vw] h-[30vh] mb-[10px] border border-white'
-              : 'transition-all w-[300px] h-[15vh] mb-[10px] border border-white'
-          "
-          ref="remoteVideo"
-          autoplay
-          playsinline
-        ></video>
-
-        <div :class="expand ? 'flex  gap-2 py-4' : 'flex flex-col gap-2'">
-          <button
-            @click="startCall"
-            class="bg-blue-900 py-1 px-2 rounded-md text-white"
-          >
-            Start Call
-          </button>
-          <button
-            @click="endCall"
-            class="bg-red-700 py-1 px-2 rounded-md text-white"
-          >
-            End Call
-          </button>
-        </div>
-      </div>
-      <!-- Incoming Call Notification -->
-      <div
-        v-if="incomingCall"
-        class="incoming-call z-[50] w-auto px-4 py-3 bg-gray-900 text-white rounded-lg shadow-lg fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-      >
-        <p>Incoming call from {{ incomingCallerId }}</p>
+      <div :class="expand ? 'flex  gap-2 py-4' : 'flex flex-col gap-2'">
         <button
-          @click="acceptCall"
-          class="bg-green-500 py-1 px-2 rounded-md text-white"
+          @click="startCall"
+          class="bg-blue-900 py-1 px-2 rounded-md text-white"
         >
-          Accept
+          Start Call
         </button>
         <button
-          @click="rejectCall"
-          class="bg-red-500 py-1 px-2 rounded-md text-white"
+          @click="endCall"
+          class="bg-red-700 py-1 px-2 rounded-md text-white"
         >
-          Reject
+          End Call
         </button>
       </div>
+    </div>
+    <!-- Incoming Call Notification -->
+    <div
+      v-if="incomingCall"
+      class="incoming-call z-[50] w-auto px-4 py-3 bg-gray-900 text-white rounded-lg shadow-lg fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+    >
+      <p>Incoming call from {{ incomingCallerId }}</p>
+      <button
+        @click="acceptCall"
+        class="bg-green-500 py-1 px-2 rounded-md text-white"
+      >
+        Accept
+      </button>
+      <button
+        @click="rejectCall"
+        class="bg-red-500 py-1 px-2 rounded-md text-white"
+      >
+        Reject
+      </button>
     </div>
   </div>
 </template>

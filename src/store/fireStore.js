@@ -190,7 +190,7 @@ export const useFirestore = defineStore(
           chatArray.push(doc.data());
         });
 
-        chats.value = chatArray; // Update `chats` ref
+        chats.value = chatArray;
 
         // ✅ Check if the number of chats is more than 5
         messageViewOpen.value = chatArray.length > 0;
@@ -250,7 +250,7 @@ export const useFirestore = defineStore(
     return {
       user,
       // login,
-      fetchPeerIDs,
+
       // logout,
       getAllUsers,
       allUsers,

@@ -34,14 +34,16 @@ import { useScrollTo } from "../composables/scrollTo";
 import { useChangeBackground } from "../composables/changeBackground";
 import EmojiPicker from "vue3-emoji-picker";
 import { addToFirestore } from "../composables/addTo";
-
+import { useAuthStoreC } from "../store/use-auth.js";
+import { useFirestore } from "../store/fireStore";
+import { useGetUserData } from "../composables/getUserData";
+const getUserData = useGetUserData();
 const { error, loading, addToCollection, message } = addToFirestore();
 const { changeBackground, random } = useChangeBackground();
 
-import { useAuthStoreC } from "../store/use-auth.js";
 const authStoreC = useAuthStoreC();
 const { user, logoutPopUpOpen, login } = storeToRefs(authStoreC);
-import { useFirestore } from "../store/fireStore";
+
 const fireStore = useFirestore();
 
 const { showFindFriends, commonChat, currentChat } = storeToRefs(fireStore);
@@ -136,10 +138,6 @@ onMounted(() => {
                 "
               >
                 <button @click="changeBackground">Change the theme</button>
-                <button @click="changeBackground">Change the theme</button>
-                <button @click="changeBackground">Change the theme</button>
-                <button @click="changeBackground">Change the theme</button>
-                <button @click="changeBackground">Change the theme</button>
               </div>
             </div>
           </div>
@@ -176,6 +174,7 @@ onMounted(() => {
             <div class="flex">
               <div v-if="chat.senderId !== user.localId">
                 <img
+                  @click="getUserData.getUserData(chat)"
                   :src="chat.img"
                   alt=""
                   class="w-12 h-12 rounded-full mr-2"

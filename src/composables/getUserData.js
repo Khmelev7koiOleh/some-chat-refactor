@@ -10,47 +10,31 @@ import { useMessageViewStore } from "../store/messageView-store";
 import { useCommonChatStore } from "../store/common-chat-store";
 import { useScrollTo } from "../composables/scrollTo";
 import { useChangeBackground } from "../composables/changeBackground";
-
+import { useProfileStore } from "../store/profile-store.js";
 import { useAuthStoreC } from "../store/use-auth.js";
 import { useFirestore } from "../store/fireStore";
 
-export function openChat() {
+export function useGetUserData() {
+  const profileStore = useProfileStore();
+  const { onProfileOpen, userProfileData } = storeToRefs(profileStore);
   const fireStore = useFirestore();
-
   const { commonChat: commonChatF, userDataForChat } = storeToRefs(fireStore);
   const authStoreC = useAuthStoreC();
   const { user, logoutPopUpOpen, login } = storeToRefs(authStoreC);
-  const { changeBackground, random } = useChangeBackground();
+
   const commonChatStore = useCommonChatStore();
   const messageViewStore = useMessageViewStore();
   const { messageViewOpen } = storeToRefs(messageViewStore);
 
-  const { scrollToLastMessage } = useScrollTo();
+  //_____________
 
-  const openChatC = async (q) => {
+  const getUserData = async (q) => {
     console.log(q);
-    changeBackground();
 
-    scrollToLastMessage();
-    userDataForChat.value = [
-      {
-        id: q.uid,
-        name: q.displayName,
-        picture: q.photoURL,
-      },
-    ];
+    profileStore.setUserProfileData(q);
 
-    try {
-      await fireStore.getChatById(q.uid, user.value.localId);
-    } catch (error) {
-      console.error("Error fetching chat:", error);
-    }
-    commonChatStore.onCommonChat = false;
-    changeBackground();
-
-    if (false) {
-      messageViewOpen.value = !messageViewOpen.value;
-    } else messageViewOpen.value = true;
+    //if
+    onProfileOpen.value = !!q;
   };
-  return { openChatC };
+  return { getUserData };
 }
