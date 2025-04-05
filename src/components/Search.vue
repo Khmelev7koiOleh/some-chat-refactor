@@ -3,6 +3,12 @@ import { ref, computed } from "vue";
 import { storeToRefs } from "pinia";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import { useFirestore } from "../store/fireStore";
+import { useGetChatsUserIn } from "../composables/getChatsUserIn.js";
+import { useAuthStoreC } from "../store/use-auth.js";
+import { auth } from "../firebase-init.js";
+const authStoreC = useAuthStoreC();
+const { user } = storeToRefs(authStoreC);
+const { getChatsUserIn } = useGetChatsUserIn();
 const fireStore = useFirestore();
 
 const {
@@ -23,11 +29,14 @@ let userOnSearch = ref(null);
 const names = data.value.map((user) => user.displayName);
 const filteredItems = computed(() => {
   return data.value.filter((user) =>
-    user.displayName.toLowerCase().includes(searchQuery.value.toLowerCase())
+    (user.displayName || "")
+      .toLowerCase()
+      .includes(searchQuery.value.toLowerCase())
   );
 });
-const selectUser = (user) => {
-  emit("handleSearch", user);
+
+const selectUser = (u) => {
+  emit("handleSearch", u);
 };
 </script>
 <template>
@@ -52,7 +61,7 @@ const selectUser = (user) => {
         />
       </div>
     </div>
-    <div class="py-3">
+    <div :class="showFindFriends ? 'py-3 h-[70vh] overflow-auto' : 'py-3'">
       <div
         v-if="showFindFriends"
         v-for="user in filteredItems"

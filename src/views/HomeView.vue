@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
 import LogoutIcon from "vue-material-design-icons/Logout.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
@@ -15,16 +16,20 @@ import CommonMessageView from "../components/CommonMessageView.vue";
 import { openChat } from "../composables/openChat";
 import DefaultView from "../components/DefaultView.vue";
 import Profile from "../components/Profile.vue";
+import myProfile from "../components/myProfile.vue";
+
 import { useCommonChatStore } from "../store/common-chat-store";
 import { useAuthStoreC } from "../store/use-auth.js";
 import { useVideoCallOpen } from "../store/video-call-store";
 import { useFirestore } from "../store/fireStore";
 import { useProfileStore } from "../store/profile-store.js";
 import { useGetUserData } from "../composables/getUserData";
+import { useGetChatsUserIn } from "../composables/getChatsUserIn.js";
+const { getChatsUserIn } = useGetChatsUserIn();
 const videoCall = useVideoCallOpen();
 const { expand, videoCallOpen } = storeToRefs(videoCall);
 const profileStore = useProfileStore();
-const { onProfileOpen } = storeToRefs(profileStore);
+const { onProfileOpen, onMyProfile } = storeToRefs(profileStore);
 const { getUserData, userProfileData } = storeToRefs(useGetUserData);
 const { openChatC } = openChat();
 const authStoreC = useAuthStoreC();
@@ -34,7 +39,7 @@ const fireStore = useFirestore();
 
 const {
   userDataForChat,
-
+  userInChats,
   showFindFriends,
   commonChat,
   currentChat,
@@ -46,9 +51,13 @@ const { messageViewOpen } = storeToRefs(messageViewStore);
 const handleSearch = (user) => {
   console.log("User selected:", user);
   openChatC(user);
+  console.log(userC.value.localId);
+  getChatsUserIn(userC.value.localId);
 };
+
 onMounted(async () => {
   try {
+    getChatsUserIn(userC.value.localId);
     fireStore.getAllUsers();
     fireStore.getChatById();
     fireStore.getAllChatsByUser();
@@ -74,6 +83,11 @@ const combinedFunc = async () => {
     <Profile />
   </div>
   <div
+    class="fixed z-60 top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/3"
+  >
+    <myProfile />
+  </div>
+  <div
     :class="
       videoCallOpen
         ? 'fixed  w-full md:w-[420px] z-50 bg-gray-950 h-[100vh]'
@@ -92,20 +106,23 @@ const combinedFunc = async () => {
       <LogoutIcon fillColor="#FFFFFF" :size="20" class="cursor-pointer" />
       <p>Logout</p>
     </div>
-    <div class="mx-4 my-4 flex items-center gap-4">
+    <div
+      @click="onMyProfile = !onMyProfile"
+      class="mx-4 my-4 flex items-center gap-4"
+    >
       <div>
         <img :src="userC.photoUrl" alt="" class="w-12 h-12 rounded-full" />
       </div>
 
       <div class="text-white font-light text-md">
-        {{ userC.email }}
+        {{ userC.displayName }}
       </div>
     </div>
     <div id="Header" class="flex justify-between items-center px-4 py-2 pt-10">
       <div class="text-xl text-gray-200 font-medium">Chats</div>
 
       <div class="flex justify-between items-center gap-4 relative">
-        <AccountGroupIcon fillColor="#FFFFFF" :size="25" />
+        <!-- <AccountGroupIcon fillColor="#FFFFFF" :size="25" /> -->
         <DotsVerticalIcon
           @click="logoutPopUpOpen = !logoutPopUpOpen"
           fillColor="#FFFFFF"

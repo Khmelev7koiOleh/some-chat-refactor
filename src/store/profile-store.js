@@ -1,9 +1,13 @@
 import { defineStore } from "pinia";
+import MyProfile from "../components/myProfile.vue";
 
 export const useProfileStore = defineStore("profile-store", {
   state: () => ({
     onProfileOpen: false,
     userProfileData: null,
+    onMyProfile: false,
+    onChangeNameOpen: false,
+    onChangePhotoOpen: false,
   }),
 
   actions: {

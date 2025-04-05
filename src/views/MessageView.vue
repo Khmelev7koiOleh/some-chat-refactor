@@ -12,6 +12,7 @@ import moment from "moment";
 import { storeToRefs } from "pinia";
 import VideoCall from "../components/VideoCall.vue";
 import DotsVerticalIcon from "vue-material-design-icons/DotsVertical.vue";
+import DeleteIcon from "vue-material-design-icons/Delete.vue";
 import AccountGroupIcon from "vue-material-design-icons/AccountGroup.vue";
 import MagnifyIcon from "vue-material-design-icons/Magnify.vue";
 import EmoticonExcitedOutlineIcon from "vue-material-design-icons/EmoticonExcitedOutline.vue";
@@ -20,10 +21,11 @@ import ArrowLeftIcon from "vue-material-design-icons/ArrowLeft.vue";
 import PlusIcon from "vue-material-design-icons/Plus.vue";
 import SendIcon from "vue-material-design-icons/Send.vue";
 import { useScrollTo } from "../composables/scrollTo";
-
+import { useDeleteMessage } from "../composables/deleteDoc.js";
 import { useMessageViewStore } from "../store/messageView-store";
 import { useVideoCallOpen } from "../store/video-call-store";
 import ScrollToBottomButton from "../components/ScrollToBottomButton.vue";
+
 import { useChangeBackground } from "../composables/changeBackground";
 import EmojiPicker from "vue3-emoji-picker";
 import "vue3-emoji-picker/css";
@@ -37,6 +39,7 @@ const {
   userDataForChat,
   chats,
 } = storeToRefs(fireStore);
+const { deleteMessage } = useDeleteMessage();
 const authStoreC = useAuthStoreC();
 const { user, logoutPopUpOpen, login } = storeToRefs(authStoreC);
 const { changeBackground, random } = useChangeBackground();
@@ -64,6 +67,23 @@ const showPicker = ref(false);
 
 const addEmoji = (emoji) => {
   message.value += emoji.i; // Append the selected emoji to the input
+};
+
+let onDeleteOpen = ref(false);
+const checkL = ref(null);
+const toggleonDeleteOpen = async (messageId) => {
+  checkL.value = messageId;
+
+  onDeleteOpen.value = !onDeleteOpen.value;
+  if (!onDeleteOpen) {
+    handleDeleteMessage(messageId);
+  }
+};
+const handleDeleteMessage = async (messageId) => {
+  // if (onDeleteOpen.value) {
+  console.log(checkL.value);
+  await deleteMessage(currentChatId.value, checkL.value);
+  onDeleteOpen.value = !onDeleteOpen.value;
 };
 const sendMessage = async () => {
   if (!message.value.trim()) return; // Prevent sending empty messages
@@ -173,10 +193,14 @@ onMounted(() => {
         </div>
       </div>
     </div>
-
+    <!-- <div class="text-blue-500">{{ currentChatId }}</div> -->
+    <div
+      v-if="onDeleteOpen"
+      class="fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2"
+    ></div>
     <div
       id="MessageSection"
-      class="w-full min-h-[calc(100vh-150px))] overflow-auto touch-auto h-[calc(100vh-200px)] justify-end items-start cursor-pointer"
+      class="w-full min-h-[calc(100vh-150px))] overflow-auto touch-auto h-[calc(100vh-180px)] justify-end items-start cursor-pointer"
     >
       <ScrollToBottomButton :container="chatContainerId" />
 
@@ -212,20 +236,43 @@ onMounted(() => {
 
               <div
                 v-else
-                class="w-[calc(80%-100px)] flex justify-end items-center space-x-1 float-right mt-8"
+                class="w-full flex justify-end items-center space-x-1 float-right mt-8"
               >
                 <div
-                  class="bg-green-500 my-2 block text-gray-200 py-1 px-2 rounded-md break-all"
+                  class="bg-green-500 max-w-[70%] my-2 block text-gray-200 rounded-md break-all relative"
                 >
-                  <div class="inline-">
-                    {{ msg.message }}
+                  <div
+                    v-if="onDeleteOpen && checkL === msg.id"
+                    class="absolute -top-[2.5rem] right-[3rem] bg-red-600 rounded-lg"
+                  >
+                    <button
+                      @click="handleDeleteMessage(msg.id)"
+                      class="text-white flex justify-center items-center gap-2 mx-auto w-[150px] h-[40px]"
+                    >
+                      <DeleteIcon fillColor="#ffffff" :size="16" />
+                      <p class="font-bold">delete message</p>
+                    </button>
                   </div>
-                  <div class="text-[11px]">
-                    {{
-                      moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
-                        "h:mm"
-                      )
-                    }}
+                  <div class="mx-1">
+                    <DotsVerticalIcon
+                      @click="toggleonDeleteOpen(msg.id)"
+                      fillColor="#ffffff"
+                      :size="16"
+                      class="absolute top-0 right-0 cursor-pointer"
+                    />
+                  </div>
+                  <div class="py-0 px-4">
+                    <div>
+                      {{ msg.message }}
+                    </div>
+
+                    <div class="text-[11px] flex justify-end">
+                      {{
+                        moment(msg.createdAt, "MMMM Do YYYY, h:mm:ss a").format(
+                          "h:mm"
+                        )
+                      }}
+                    </div>
                   </div>
                 </div>
               </div>

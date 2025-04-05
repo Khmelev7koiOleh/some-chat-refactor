@@ -15,6 +15,7 @@ import {
   setDoc,
   collection,
 } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -36,5 +37,6 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const db = getFirestore(app);
 const analytics = getAnalytics(app);
+export const storage = getStorage(app);
 
 export { db, auth, provider, signInWithPopup };

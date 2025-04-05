@@ -37,7 +37,7 @@ export const useFirestore = defineStore(
   () => {
     const authStoreC = useAuthStoreC();
     const { user, logoutPopUpOpen, login } = storeToRefs(authStoreC);
-
+    const userInChats = ref([]);
     const allUsers = ref([]);
     const userDataForChat = ref([]);
     const peerId = ref("");
@@ -145,6 +145,7 @@ export const useFirestore = defineStore(
 
     const getChatById = async (userId1, userId2) => {
       console.log(userId1, userId2);
+
       const chatsRef = collection(db, "chats");
       const q = query(
         chatsRef,
@@ -193,7 +194,7 @@ export const useFirestore = defineStore(
         chats.value = chatArray;
 
         // ✅ Check if the number of chats is more than 5
-        messageViewOpen.value = chatArray.length > 0;
+        // messageViewOpen.value = chatArray.length > 0;
 
         console.log(`Chats count: ${chatArray.length}`, chats.value);
       });
@@ -263,7 +264,7 @@ export const useFirestore = defineStore(
       currentChat,
       getCommonChatsByUser,
       commonChat,
-
+      userInChats,
       peerUsers,
       getAllChatsByUser,
       getChatById,
