@@ -94,14 +94,27 @@ export const useAuthStoreC = defineStore(
           createdAt: new Date(),
         };
 
+        const q = userSnap.data();
+        // –––––––––
+        const userDataExist = {
+          uid: q.uid,
+          displayName: q.displayName,
+          email: q.email,
+          photoURL:
+            q.photoURL ||
+            "https://sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png",
+
+          createdAt: new Date(),
+        };
+
         if (!userSnap.exists()) {
-          await setDoc(userRef, userData);
+          await setDoc(userRef, userDataExist);
           console.log("New user added to Firestore.");
         } else {
           console.log("User already exists in Firestore:", userSnap.data());
         }
 
-        setUser(result.user);
+        setUser(q);
 
         router.push("/");
       } catch (error) {

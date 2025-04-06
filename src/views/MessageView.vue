@@ -183,9 +183,9 @@ onMounted(() => {
     <div>
       <div
         :class="
-          videoCall
-            ? 'w-[300px] h-[300px] fixed top-[20vh] right-[5vw] '
-            : 'w-[300px] h-[300px] fixed top-[15%] left-[5vw] '
+          videoCallOpen
+            ? 'w-[300px] h-[300px] fixed top-[0vh] left-[0vw] '
+            : 'w-[300px] h-[300px] fixed transform translate-x-[45vw]  translate-y-[25vw] '
         "
       >
         <div class="flex items-center justify-center">

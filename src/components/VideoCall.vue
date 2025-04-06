@@ -278,7 +278,6 @@ onMounted(() => {
 <template>
   <div class="flex flex-col items-center justify-center">
     <div
-      v-if="videoCallOpen"
       :class="
         expand
           ? 'video-call w-[100vw] h-[100vh] bg-gray-950 py-2 flex flex-col fixed justify-center items-center'
