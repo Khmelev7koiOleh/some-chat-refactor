@@ -58,18 +58,22 @@ export const useAuthStoreC = defineStore(
 
     const setUser = (userInfo) => {
       console.log("User in setUser", userInfo);
-      if (!userInfo) router.push("/login"); // Prevents errors if userInfo is undefined
-
-      user.value = {
-        localId: userInfo.uid,
-        email: userInfo.email,
-        displayName: userInfo.displayName,
-        photoUrl: userInfo.photoURL,
-        emailVerified: userInfo.emailVerified,
-        lastLoginAt: userInfo.metadata?.lastSignInTime || null,
-        lastRefreshAt: userInfo.metadata?.creationTime || null,
-      };
-      console.log("User set:", user.value);
+      if (!userInfo) {
+        router.push("/login");
+        return;
+      } // Prevents errors if userInfo is undefined
+      else {
+        user.value = {
+          localId: userInfo.uid,
+          email: userInfo.email,
+          displayName: userInfo.displayName,
+          photoUrl: userInfo.photoURL,
+          emailVerified: userInfo.emailVerified,
+          lastLoginAt: userInfo.metadata?.lastSignInTime || null,
+          lastRefreshAt: userInfo.metadata?.creationTime || null,
+        };
+        console.log("User set:", user.value);
+      }
     };
 
     // ✅ Login function with user existence check
