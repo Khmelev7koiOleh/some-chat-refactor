@@ -62,7 +62,7 @@ const handleSearch = (user) => {
 
 onMounted(async () => {
   try {
-    authStoreC.checkUser(userC);
+    authStoreC.checkUser(userC.value);
     getChatsUserIn(userC.value.localId);
     fireStore.getAllUsers();
     fireStore.getChatById();
@@ -121,7 +121,7 @@ const combinedFunc = async () => {
       </div>
 
       <div class="text-white font-light text-md">
-        {{ userC.displayName }}
+        {{ userC }}
       </div>
     </div>
     <div id="Header" class="flex justify-between items-center px-4 py-2 pt-10">

@@ -57,10 +57,11 @@ export const useAuthStoreC = defineStore(
     });
 
     const checkUser = (user) => {
-      if (!userInfo) {
+      if (!user.localId || !user.email) {
+        console.log("user is  not in");
         router.push("/login");
       } else {
-        console.log("user is in");
+        console.log("user is in", user);
       }
     };
     const setUser = (userInfo) => {
