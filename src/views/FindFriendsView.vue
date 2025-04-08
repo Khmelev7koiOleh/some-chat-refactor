@@ -75,35 +75,33 @@ const filteredUsers = computed(() => {
 });
 </script>
 <template>
-  <div
-    v-for="user in filteredUsers"
-    :key="user.id"
-    class="overflow-auto h-[60vh]"
-  >
-    <!-- <div class="text-red-400">{{ user }}</div> -->
-    <div @click="handleOpenChat(user)">
-      <div
-        v-if="hideMyChat(user.uid)"
-        @click="createNewChat(user)"
-        class="w-full bg-transparent flex items-center overflow-auto rounded-lg m-1 px-4 py-3 cursor-pointer hover:bg-gray-800"
-      >
-        <div>
-          <img
-            :src="user.photoURL || ''"
-            alt=""
-            class="w-12 h-12 rounded-full mr-8"
-          />
-        </div>
-        <div class="w-full">
-          <div class="flex justify-between items-center">
-            <div class="text-white">{{ user.displayName }}</div>
-
-            <div class="text-white"></div>
+  <div class="overflow-auto h-[60vh]">
+    <div v-for="user in filteredUsers" :key="user.id">
+      <!-- <div class="text-red-400">{{ user }}</div> -->
+      <div @click="handleOpenChat(user)">
+        <div
+          v-if="hideMyChat(user.uid)"
+          @click="createNewChat(user)"
+          class="w-full bg-transparent flex items-center overflow-auto rounded-lg m-1 px-4 py-3 cursor-pointer hover:bg-gray-800"
+        >
+          <div>
+            <img
+              :src="user.photoURL || ''"
+              alt=""
+              class="w-12 h-12 rounded-full mr-8"
+            />
           </div>
+          <div class="w-full">
+            <div class="flex justify-between items-center">
+              <div class="text-white">{{ user.displayName }}</div>
 
-          <div class="flex items-center">
-            <CheckAllIcon fillColor="#FFFFFF" :size="25" />
-            <div class="text-white">Message ...</div>
+              <div class="text-white"></div>
+            </div>
+
+            <div class="flex items-center">
+              <CheckAllIcon fillColor="#FFFFFF" :size="25" />
+              <div class="text-white">Message ...</div>
+            </div>
           </div>
         </div>
       </div>
