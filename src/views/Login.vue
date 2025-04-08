@@ -16,7 +16,7 @@ const authMode = ref("sign-in"); // 'signin' or 'signup'
 const toggleAuthMode = (mode) => {
   authMode.value = mode;
 };
-const signInUpText = ref("Sign-up");
+const signInUpText = ref("Sign-in");
 const funcSignInUpText = () => {
   signInUpText.value = authMode.value === "sign-in" ? "Sign-in" : "Sign-up";
 };

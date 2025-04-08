@@ -121,7 +121,7 @@ const combinedFunc = async () => {
       </div>
 
       <div class="text-white font-light text-md">
-        {{ userC }}
+        {{ userC.displayName }}
       </div>
     </div>
     <div id="Header" class="flex justify-between items-center px-4 py-2 pt-10">
