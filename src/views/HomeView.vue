@@ -33,7 +33,12 @@ const { onProfileOpen, onMyProfile } = storeToRefs(profileStore);
 const { getUserData, userProfileData } = storeToRefs(useGetUserData);
 const { openChatC } = openChat();
 const authStoreC = useAuthStoreC();
-const { user: userC, logoutPopUpOpen, login } = storeToRefs(authStoreC);
+const {
+  user: userC,
+  logoutPopUpOpen,
+  login,
+  checkUser,
+} = storeToRefs(authStoreC);
 
 const fireStore = useFirestore();
 
@@ -57,6 +62,7 @@ const handleSearch = (user) => {
 
 onMounted(async () => {
   try {
+    authStoreC.checkUser(userC);
     getChatsUserIn(userC.value.localId);
     fireStore.getAllUsers();
     fireStore.getChatById();

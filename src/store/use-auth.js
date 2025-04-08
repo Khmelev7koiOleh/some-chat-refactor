@@ -56,6 +56,13 @@ export const useAuthStoreC = defineStore(
       lastRefreshAt: null,
     });
 
+    const checkUser = (user) => {
+      if (!userInfo) {
+        router.push("/login");
+      } else {
+        console.log("user is in");
+      }
+    };
     const setUser = (userInfo) => {
       console.log("User in setUser", userInfo);
       if (!userInfo) {
@@ -276,6 +283,7 @@ export const useAuthStoreC = defineStore(
 
     return {
       user,
+      checkUser,
       loginCo,
       signUp,
       signIn,
