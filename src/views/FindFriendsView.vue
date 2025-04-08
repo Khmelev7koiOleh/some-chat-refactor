@@ -75,7 +75,11 @@ const filteredUsers = computed(() => {
 });
 </script>
 <template>
-  <div v-for="user in filteredUsers" :key="user.id">
+  <div
+    v-for="user in filteredUsers"
+    :key="user.id"
+    class="overflow-auto h-[60vh]"
+  >
     <!-- <div class="text-red-400">{{ user }}</div> -->
     <div @click="handleOpenChat(user)">
       <div
