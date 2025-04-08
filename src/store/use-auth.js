@@ -60,7 +60,6 @@ export const useAuthStoreC = defineStore(
       console.log("User in setUser", userInfo);
       if (!userInfo) {
         router.push("/login");
-        return;
       } // Prevents errors if userInfo is undefined
       else {
         user.value = {
