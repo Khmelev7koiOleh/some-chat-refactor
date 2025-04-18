@@ -66,12 +66,14 @@ const handleSearch = (user) => {
 onMounted(async () => {
   console.log(userC);
   try {
-    authStoreC.checkUser(userC.value);
     getChatsUserIn(userC.value.localId);
     fireStore.getAllUsers();
     fireStore.getChatById();
     fireStore.getAllChatsByUser();
     fireStore.getCommonChatsByUser();
+    setTimeout(() => {
+      authStoreC.checkUser(userC.value);
+    }, 1000);
   } catch (error) {
     console.log(error);
   }
