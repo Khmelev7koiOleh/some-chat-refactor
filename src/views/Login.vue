@@ -9,7 +9,7 @@ const { logoutPopUpOpen, loginCo } = storeToRefs(useAuthStoreC);
 const name = ref(null);
 const email = ref(null);
 const password = ref(null);
-
+const errorMessage = ref("");
 const authMode = ref("sign-in"); // 'signin' or 'signup'
 
 // Switch between Sign In and Sign Up
@@ -18,6 +18,7 @@ const toggleAuthMode = (mode) => {
 };
 const signInUpText = ref("Sign-in");
 const funcSignInUpText = () => {
+  errorMessage.value = "";
   signInUpText.value = authMode.value === "sign-in" ? "Sign-in" : "Sign-up";
 };
 
@@ -25,11 +26,20 @@ const handleSignUpIn = (name, email, password) => {
   console.log("handle name", name);
   console.log("handle Email", email);
   console.log("handle password", password);
+
   if (authMode.value === "sign-in") {
-    authStoreC.signIn(name, email, password);
+    if (password.length >= 6) {
+      authStoreC.signIn(name, email, password);
+    } else {
+      errorMessage.value = "at least 6 symbols";
+    }
   }
   if (authMode.value === "sign-up") {
-    authStoreC.signUp(name, email, password);
+    if (password.length >= 6) {
+      authStoreC.signIn(name, email, password);
+    } else {
+      errorMessage.value = "at least 6 symbols";
+    }
   }
 };
 
@@ -49,6 +59,7 @@ watch(authMode, funcSignInUpText, handleSignUpIn);
           class="flex flex-col items-center justify-center gap-4 m-4 absolute top-[20px]"
         >
           <div class="text-white text-xl mb-8">Login</div>
+
           <div class="flex gap-4 justify-center items-center z-50">
             <div
               @click="toggleAuthMode('sign-up')"
@@ -60,6 +71,7 @@ watch(authMode, funcSignInUpText, handleSignUpIn);
             >
               Sign up
             </div>
+
             <div
               @click="toggleAuthMode('sign-in')"
               :class="
@@ -71,6 +83,7 @@ watch(authMode, funcSignInUpText, handleSignUpIn);
               Sign in
             </div>
           </div>
+          <div class="text-red-400">{{ errorMessage }}</div>
         </div>
         <div
           class="w-full h-full flex flex-col justify-end items-center gap-4 absolute bottom-[50px] right-0"

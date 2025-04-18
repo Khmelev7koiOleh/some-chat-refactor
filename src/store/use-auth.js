@@ -56,7 +56,28 @@ export const useAuthStoreC = defineStore(
       lastRefreshAt: null,
     });
 
+    const userR = ref({
+      localId: null,
+      email: null,
+      displayName: null,
+      photoUrl: null,
+      emailVerified: null,
+      lastLoginAt: null,
+      lastRefreshAt: null,
+    });
+
+    const das = ref(null);
+    const die = ref({
+      localId: null,
+      email: null,
+      displayName: null,
+      photoUrl: null,
+      emailVerified: null,
+      lastLoginAt: null,
+      lastRefreshAt: null,
+    });
     const checkUser = (user) => {
+      console.log(user);
       if (!user.localId || !user.email) {
         console.log("user is  not in");
         router.push("/login");
@@ -67,10 +88,17 @@ export const useAuthStoreC = defineStore(
     const setUser = (userInfo) => {
       console.log("User in setUser", userInfo);
       if (!userInfo) {
+        console.log("error errorerrorerrorerrorerrorerrorerrorerrorerror");
         router.push("/login");
+        return;
       } // Prevents errors if userInfo is undefined
       else {
-        user.value = {
+        console.log(
+          "User in setUser setUser setUser setUser setUser setUser setUser",
+          userInfo.uid
+        );
+
+        const newUser = {
           localId: userInfo.uid,
           email: userInfo.email,
           displayName: userInfo.displayName,
@@ -79,8 +107,20 @@ export const useAuthStoreC = defineStore(
           lastLoginAt: userInfo.metadata?.lastSignInTime || null,
           lastRefreshAt: userInfo.metadata?.creationTime || null,
         };
-        console.log("User set:", user.value);
+
+        user.value = newUser;
+        nextTick(() => {
+          console.log(
+            "User after update:",
+            JSON.parse(JSON.stringify(user.value))
+          );
+        });
+        console.log("User in etUser setUser setUser setUser", userInfo.uid);
       }
+      console.log("User set value:", user.value);
+      console.log("User set:", user);
+      console.log("User set:", userR);
+      console.log("User set:", userR.value);
     };
 
     // ✅ Login function with user existence check
@@ -93,40 +133,47 @@ export const useAuthStoreC = defineStore(
 
         const userRef = doc(db, "users", result.user.uid);
         const userSnap = await getDoc(userRef);
-
-        const userData = {
-          uid: result.user.uid,
-          displayName: result.user.displayName,
-          email: result.user.email,
-          photoURL:
-            result.user.photoURL ||
-            "https://www.w3schools.com/howto/img_avatar.png",
-          providerId: result.user.providerData[0].providerId,
-          createdAt: new Date(),
-        };
-
         const q = userSnap.data();
-        // –––––––––
-        const userDataExist = {
-          uid: q.uid,
-          displayName: q.displayName,
-          email: q.email,
-          photoURL:
-            q.photoURL ||
-            "https://sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png",
-
-          createdAt: new Date(),
-        };
 
         if (!userSnap.exists()) {
-          await setDoc(userRef, userDataExist);
+          console.log(
+            "User check User checkUser checkUser checkUser check",
+            result.user.uid
+          );
+          const userData = {
+            uid: result.user.uid,
+            displayName: result.user.displayName,
+            email: result.user.email,
+            photoURL:
+              result.user.photoURL ||
+              "https://www.w3schools.com/howto/img_avatar.png",
+            providerId: result.user.providerData[0].providerId,
+            createdAt: new Date(),
+          };
+          await setDoc(userRef, userData);
           console.log("New user added to Firestore.");
+
+          setTimeout(() => {
+            setUser(userData);
+          }, 1000);
         } else {
+          console.log(q);
+          // –––––––––
+          const userDataExist = {
+            uid: q.uid,
+            displayName: q.displayName,
+            email: q.email,
+            photoURL:
+              q.photoURL ||
+              "https://sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png",
+            createdAt: new Date(),
+          };
+          await setDoc(userRef, userDataExist);
           console.log("User already exists in Firestore:", userSnap.data());
+          console.log(q);
+          setUser(q);
         }
-
-        setUser(q);
-
+        console.log(user.value.localId);
         router.push("/");
       } catch (error) {
         console.error("Login failed:", error);
@@ -284,6 +331,9 @@ export const useAuthStoreC = defineStore(
 
     return {
       user,
+      das,
+      die,
+      userR,
       checkUser,
       loginCo,
       signUp,

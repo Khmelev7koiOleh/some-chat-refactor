@@ -35,6 +35,9 @@ const { openChatC } = openChat();
 const authStoreC = useAuthStoreC();
 const {
   user: userC,
+  das,
+  die,
+  userR,
   logoutPopUpOpen,
   login,
   checkUser,
@@ -61,6 +64,7 @@ const handleSearch = (user) => {
 };
 
 onMounted(async () => {
+  console.log(userC);
   try {
     authStoreC.checkUser(userC.value);
     getChatsUserIn(userC.value.localId);
@@ -119,9 +123,10 @@ const combinedFunc = async () => {
       <div>
         <img :src="userC.photoUrl" alt="" class="w-12 h-12 rounded-full" />
       </div>
-
-      <div class="text-white font-light text-md">
-        {{ userC.displayName }}
+      <div class="flex flex-col gap-5">
+        <div class="text-white font-light text-md">
+          {{ userC.displayName }}
+        </div>
       </div>
     </div>
     <div id="Header" class="flex justify-between items-center px-4 py-2 pt-10">
